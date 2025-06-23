@@ -14,6 +14,8 @@ require("dotenv").config();
 //models
 const Login = require("./models/Login");
 const Tickets = require("./models/Tickets")
+const Articles = require("./models/Articles")
+const Customers = require("./models/Customers")
 
 
 
@@ -87,6 +89,7 @@ app.post('/tickets', async (req, res) => {
     email: req.body.email,
     message: req.body.message,
     time: req.body.time,
+    status: req.body.status,
   })
   try {
     await newTickets.save();
@@ -95,6 +98,137 @@ app.post('/tickets', async (req, res) => {
     res.status(400).send("Error adding ticket");
   }
 })
+
+app.put("/tickets/:id", async (req, res) => {
+  try {
+    const updatedTicket = await Tickets.findByIdAndUpdate(
+      req.params.id,  // Znajdź element po ID
+      { nameandsurname: req.body.nameandsurname, email: req.body.email, message: req.body.message, time: req.body.time, status: req.body.status },  // Zaktualizuj dane
+      { new: true }  // Zwróć zaktualizowany obiekt
+    );
+    res.json(updatedTicket);
+  } catch (err) {
+    res.status(400).send("Error updating ticker");
+  }
+});
+
+
+
+
+app.post('/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('No file uploaded');
+  }
+
+  // Zwracamy pełną ścieżkę do pliku
+  res.json({ imageUrl: `/static/${req.file.filename}` });
+});
+
+
+
+app.get("/articles", async (req, res) => {
+  try {
+    const articles = await Articles.find();
+    res.json(articles);
+    
+  } catch (err) {
+    res.status(400).send("Error fetching articles");
+  }
+});
+
+
+app.post('/articles', async (req, res) => {
+  const newArticles = new Articles({
+    title: req.body.title,
+    description: req.body.description,
+    author: req.body.author,
+    imageurl: req.body.imageurl,
+    
+  })
+  try {
+    await newArticles.save();
+    res.status(201).json(newArticles);
+  } catch (err) {
+    res.status(400).send("Error adding article");
+  }
+})
+
+app.delete("/articles/:id", async (req, res) => {
+  try {
+    const articles = await Articles.findByIdAndDelete(req.params.id);
+    res.json({ message: "Article deleted", articles });
+  } catch (err) {
+    res.status(400).send("Error deleting article");
+  }
+});
+
+
+app.get("/customers", async (req, res) => {
+  try {
+    const customers = await Customers.find();
+    res.json(customers);
+    
+  } catch (err) {
+    res.status(400).send("Error fetching customers");
+  }
+});
+
+app.post('/customers', async (req, res) => {
+  const newCustomers = new Customers({
+    name: req.body.name,
+    surname: req.body.surname,
+    street: req.body.street,
+    postcode: req.body.postcode,
+    city: req.body.city,
+    companyname: req.body.companyname, 
+    companystreet: req.body.companystreet,
+    companypostcode: req.body.companypostcode,
+    companycity: req.body.companycity,
+    email: req.body.email,
+    invoice: req.body.invoice,
+    login: req.body.login,
+    newsletter: req.body.newsletter,
+    password: req.body.password,
+    phonenumber: req.body.phonenumber,
+    regulations: req.body.regulations,
+    companynip: req.body.companynip,
+    companyregon: req.body.companyregon,
+  })
+  try {
+    await newCustomers.save();
+    res.status(201).json(newCustomers);
+  } catch (err) {
+    res.status(400).send("Error adding customer");
+  }
+})
+
+app.delete("/customers/:id", async (req, res) => {
+  try {
+    const customers = await Customers.findByIdAndDelete(req.params.id);
+    res.json({ message: "Customer deleted", customers });
+  } catch (err) {
+    res.status(400).send("Error deleting customer");
+  }
+});
+
+
+app.put("/customers/:id", async (req, res) => {
+  try {
+    const updatedCustomer = await Customers.findByIdAndUpdate(
+      req.params.id,  // Znajdź element po ID
+      { name: req.body.name, surname: req.body.surname, street: req.body.street, postcode: req.body.postcode, city: req.body.city, companyname: req.body.companyname, companystreet: req.body.companystreet, companypostcode: req.body.companypostcode, companycity: req.body.companycity, email: req.body.email, invoice: req.body.invoice, login: req.body.login, newsletter: req.body.newsletter, password: req.body.password, phonenumber: req.body.phonenumber, regulations: req.body.regulations, companynip: req.body.companynip, companyregon: req.body.companyregon },  // Zaktualizuj dane
+      { new: true }  // Zwróć zaktualizowany obiekt
+    );
+    res.json(updatedCustomer);
+  } catch (err) {
+    res.status(400).send("Error updating customer");
+  }
+});
+
+
+
+
+
 
 
 // Uruchamiamy serwer
