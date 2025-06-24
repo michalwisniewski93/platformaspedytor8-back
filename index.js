@@ -16,6 +16,7 @@ const Login = require("./models/Login");
 const Tickets = require("./models/Tickets")
 const Articles = require("./models/Articles")
 const Customers = require("./models/Customers")
+const Salessites = require("./models/Salessites")
 
 
 
@@ -225,6 +226,64 @@ app.put("/customers/:id", async (req, res) => {
   }
 });
 
+
+
+
+
+
+app.get("/salessites", async (req, res) => {
+  try {
+    const salessites = await Salessites.find();
+    res.json(salessites);
+    
+  } catch (err) {
+    res.status(400).send("Error fetching salessites");
+  }
+});
+
+
+app.post('/salessites', async (req, res) => {
+  const newSalessites = new Salessites({
+    title: req.body.title,
+    imageurl: req.body.imageurl,
+    numberoflessons: req.body.numberoflessons,
+    price: req.body.price,
+    pricebeforethirtydays: req.body.pricebeforethirtydays,
+    salescontent: req.body.salescontent,
+    linktoyoutube: req.body.linktoyoutube,
+    contentlist: req.body.contentlist,
+    author: req.body.author,
+  })
+  try {
+    await newSalessites.save();
+    res.status(201).json(newSalessites);
+  } catch (err) {
+    res.status(400).send("Error adding sales site");
+  }
+})
+
+app.delete("/salessites/:id", async (req, res) => {
+  try {
+    const salessites = await Salessites.findByIdAndDelete(req.params.id);
+    res.json({ message: "Sales site deleted", salessites });
+  } catch (err) {
+    res.status(400).send("Error deleting sales sites");
+  }
+});
+
+
+app.put("/salessites/:id", async (req, res) => {
+  try {
+    const updatedSalessite = await Salessites.findByIdAndUpdate(
+      req.params.id,  // Znajdź element po ID
+      { title: req.body.title, imageurl: req.body.imageurl, numberoflessons: req.body.numberoflessons, price: req.body.price, pricebeforethirtydays: req.body.pricebeforethirtydays, salescontent: req.body.salescontent, linktoyoutube: req.body.linktoyoutube, contentlist: req.body.contentlist, author: req.body.author },  // Zaktualizuj dane
+      { new: true }  // Zwróć zaktualizowany obiekt
+    );
+    res.json(updatedSalessite);
+  } catch (err) {
+    res.status(400).send("Error updating sales site");
+  }
+});
 
 
 
