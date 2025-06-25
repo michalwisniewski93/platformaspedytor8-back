@@ -10,6 +10,9 @@ const salessitesSchema = new mongoose.Schema({
     linktoyoutube: {type: String, required: true},
     contentlist: {type: String, required: true},
     author: {type: String, required: true},
+    coursecontent: {type: String, required: true},
+    courselinks: {type: String, required: true},
+    accesscode: {type: String, required: true},
 })
 
 const Salessites = mongoose.model("Salessites", salessitesSchema)

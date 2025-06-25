@@ -18,7 +18,8 @@ const customersSchema = new mongoose.Schema({
     phonenumber: {type: String, required: true},
     regulations: {type: Boolean, required: true},
     companynip: {type: Number, required: false},
-    companyregon: {type: Number, required: false}
+    companyregon: {type: Number, required: false},
+    accesses: {type: String, required: true},
 })
 
 const Customers = mongoose.model("Customers", customersSchema)

@@ -194,6 +194,7 @@ app.post('/customers', async (req, res) => {
     regulations: req.body.regulations,
     companynip: req.body.companynip,
     companyregon: req.body.companyregon,
+    accesses: req.body.accesses
   })
   try {
     await newCustomers.save();
@@ -217,7 +218,7 @@ app.put("/customers/:id", async (req, res) => {
   try {
     const updatedCustomer = await Customers.findByIdAndUpdate(
       req.params.id,  // Znajdź element po ID
-      { name: req.body.name, surname: req.body.surname, street: req.body.street, postcode: req.body.postcode, city: req.body.city, companyname: req.body.companyname, companystreet: req.body.companystreet, companypostcode: req.body.companypostcode, companycity: req.body.companycity, email: req.body.email, invoice: req.body.invoice, login: req.body.login, newsletter: req.body.newsletter, password: req.body.password, phonenumber: req.body.phonenumber, regulations: req.body.regulations, companynip: req.body.companynip, companyregon: req.body.companyregon },  // Zaktualizuj dane
+      { name: req.body.name, surname: req.body.surname, street: req.body.street, postcode: req.body.postcode, city: req.body.city, companyname: req.body.companyname, companystreet: req.body.companystreet, companypostcode: req.body.companypostcode, companycity: req.body.companycity, email: req.body.email, invoice: req.body.invoice, login: req.body.login, newsletter: req.body.newsletter, password: req.body.password, phonenumber: req.body.phonenumber, regulations: req.body.regulations, companynip: req.body.companynip, companyregon: req.body.companyregon, accesses: req.body.accesses },  // Zaktualizuj dane
       { new: true }  // Zwróć zaktualizowany obiekt
     );
     res.json(updatedCustomer);
@@ -253,6 +254,9 @@ app.post('/salessites', async (req, res) => {
     linktoyoutube: req.body.linktoyoutube,
     contentlist: req.body.contentlist,
     author: req.body.author,
+    coursecontent: req.body.coursecontent,
+    courselinks: req.body.courselinks,
+    accesscode: req.body.accesscode,
   })
   try {
     await newSalessites.save();
@@ -276,7 +280,7 @@ app.put("/salessites/:id", async (req, res) => {
   try {
     const updatedSalessite = await Salessites.findByIdAndUpdate(
       req.params.id,  // Znajdź element po ID
-      { title: req.body.title, imageurl: req.body.imageurl, numberoflessons: req.body.numberoflessons, price: req.body.price, pricebeforethirtydays: req.body.pricebeforethirtydays, salescontent: req.body.salescontent, linktoyoutube: req.body.linktoyoutube, contentlist: req.body.contentlist, author: req.body.author },  // Zaktualizuj dane
+      { title: req.body.title, imageurl: req.body.imageurl, numberoflessons: req.body.numberoflessons, price: req.body.price, pricebeforethirtydays: req.body.pricebeforethirtydays, salescontent: req.body.salescontent, linktoyoutube: req.body.linktoyoutube, contentlist: req.body.contentlist, author: req.body.author, coursecontent: req.body.coursecontent, courselinks: req.body.courselinks, accesscode: req.body.accesscode },  // Zaktualizuj dane
       { new: true }  // Zwróć zaktualizowany obiekt
     );
     res.json(updatedSalessite);
