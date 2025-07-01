@@ -1,5 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const stripe = require('stripe')('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');
 const cors = require("cors");
 
 
@@ -290,8 +291,54 @@ app.put("/salessites/:id", async (req, res) => {
 });
 
 
+app.post('/create-checkout-session', async (req, res) => {
+  const items = req.body.items;
 
+  const line_items = items.map(item => ({
+    price_data: {
+      currency: 'pln',
+      product_data: {
+        name: item.title,
+        images: [`http://localhost:5000/${item.imageurl}`],
+      },
+      unit_amount: Math.round(parseFloat(item.price) * 100), // zł -> grosze
+    },
+    quantity: 1,
+  }));
 
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card', 'blik'],
+      mode: 'payment',
+      line_items,
+      success_url: 'http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'http://localhost:3000/cancel',
+      locale: 'pl',  
+    });
+
+    res.json({ id: session.id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/check-payment-status', async (req, res) => {
+  const sessionId = req.query.sessionId;
+
+  if (!sessionId) return res.status(400).json({ error: 'Brak sessionId' });
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status === 'paid') {
+      return res.json({ paid: true });
+    } else {
+      return res.json({ paid: false });
+    }
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+});
 
 
 // Uruchamiamy serwer
