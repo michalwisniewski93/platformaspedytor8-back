@@ -18,6 +18,7 @@ const Tickets = require("./models/Tickets")
 const Articles = require("./models/Articles")
 const Customers = require("./models/Customers")
 const Salessites = require("./models/Salessites")
+const Orders = require("./models/Orders")
 
 
 
@@ -337,6 +338,94 @@ app.get('/check-payment-status', async (req, res) => {
     }
   } catch (error) {
     return res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/orders", async (req, res) => {
+  try {
+    const orders = await Orders.find();
+    res.json(orders);
+    
+  } catch (err) {
+    res.status(400).send("Error fetching orders");
+  }
+});
+
+
+app.post('/orders', async (req, res) => {
+  const newOrders = new Orders({
+    name: req.body.name,
+    surname: req.body.surname,
+    street: req.body.street,
+    postcode: req.body.postcode,
+    city: req.body.city,
+    companyname: req.body.companyname,
+    companystreet: req.body.companystreet,
+    companypostcode: req.body.companypostcode,
+    companycity: req.body.companycity,
+    email: req.body.email,
+    invoice: req.body.invoice,
+    login: req.body.login,
+    newsletter: req.body.newsletter,
+    password: req.body.password,
+    phonenumber: req.body.phonenumber,
+    regulations: req.body.regulations,
+    companynip: req.body.companynip,
+    companyregon: req.body.companyregon,
+    ordercontent: req.body.ordercontent,
+    orderamount: req.body.orderamount,
+    ordertime: req.body.ordertime,
+  })
+  try {
+    await newOrders.save();
+    res.status(201).json(newOrders);
+  } catch (err) {
+    res.status(400).send("Error adding order");
+  }
+})
+
+
+
+app.put("/orders/:id", async (req, res) => {
+  try {
+    const updatedOrder = await Orders.findByIdAndUpdate(
+      req.params.id,  // Znajdź element po ID
+      { name: req.body.name,
+    surname: req.body.surname,
+    street: req.body.street,
+    postcode: req.body.postcode,
+    city: req.body.city,
+    companyname: req.body.companyname,
+    companystreet: req.body.companystreet,
+    companypostcode: req.body.companypostcode,
+    companycity: req.body.companycity,
+    email: req.body.email,
+    invoice: req.body.invoice,
+    login: req.body.login,
+    newsletter: req.body.newsletter,
+    password: req.body.password,
+    phonenumber: req.body.phonenumber,
+    regulations: req.body.regulations,
+    companynip: req.body.companynip,
+    companyregon: req.body.companyregon,
+    ordercontent: req.body.ordercontent,
+    orderamount: req.body.orderamount,
+    ordertime: req.body.ordertime  },  // Zaktualizuj dane
+      { new: true }  // Zwróć zaktualizowany obiekt
+    );
+    res.json(updatedOrder);
+  } catch (err) {
+    res.status(400).send("Error updating order");
+  }
+});
+
+
+app.delete("/orders/:id", async (req, res) => {
+  try {
+    const orders = await Orders.findByIdAndDelete(req.params.id);
+    res.json({ message: "Orders deleted", orders });
+  } catch (err) {
+    res.status(400).send("Error deleting orders");
   }
 });
 
