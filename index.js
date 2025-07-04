@@ -19,6 +19,7 @@ const Articles = require("./models/Articles")
 const Customers = require("./models/Customers")
 const Salessites = require("./models/Salessites")
 const Orders = require("./models/Orders")
+const Taxdatas = require("./models/Taxdatas")
 
 
 
@@ -428,6 +429,43 @@ app.delete("/orders/:id", async (req, res) => {
     res.status(400).send("Error deleting orders");
   }
 });
+
+
+app.get("/taxdatas", async (req, res) => {
+  try {
+    const taxdatas = await Taxdatas.find();
+    res.json(taxdatas);
+    
+  } catch (err) {
+    res.status(400).send("Error fetching taxdatas");
+  }
+});
+
+
+
+app.put("/taxdatas/:id", async (req, res) => {
+  try {
+    const updatedTaxdata = await Taxdatas.findByIdAndUpdate(
+      req.params.id,  // Znajdź element po ID
+      { sellercompanyname: req.body.sellercompanyname,
+        sellercompanystreet: req.body.sellercompanystreet,
+        sellercompanypostcode: req.body.sellercompanypostcode,
+        sellercompanycity: req.body.sellercompanycity,
+        sellercompanynip: req.body.sellercompanynip,
+        sellercompanyregon: req.body.sellercompanyregon,
+        invoicesactualnumber: req.body.invoicesactualnumber,
+        vatpercentage: req.body.vatpercentage,
+        basisforvatexemption: req.body.basisforvatexemption,
+    },  // Zaktualizuj dane
+      { new: true }  // Zwróć zaktualizowany obiekt
+    );
+    res.json(updatedTaxdata);
+  } catch (err) {
+    res.status(400).send("Error updating taxdata");
+  }
+});
+
+
 
 
 // Uruchamiamy serwer
