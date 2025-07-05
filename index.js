@@ -506,7 +506,8 @@ app.post('/invoices', async (req, res) => {
     orderamount: req.body.orderamount,
     basisforvatexemption: req.body.basisforvatexemption,
     paymentterm: req.body.paymentterm,
-    ordertime: req.body.ordertime
+    ordertime: req.body.ordertime,
+    login: req.body.login
      
   })
   try {
@@ -548,7 +549,8 @@ app.put("/invoices/:id", async (req, res) => {
     orderamount: req.body.orderamount,
     basisforvatexemption: req.body.basisforvatexemption,
     paymentterm: req.body.paymentterm,
-    ordertime: req.body.ordertime
+    ordertime: req.body.ordertime,
+    login: req.body.login
     },  // Zaktualizuj dane
       { new: true }  // Zwróć zaktualizowany obiekt
     );
