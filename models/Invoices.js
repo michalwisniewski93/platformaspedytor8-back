@@ -26,7 +26,8 @@ const invoicesSchema = new mongoose.Schema({
     orderamount: {type: Number, required: true},
     basisforvatexemption: {type: String, required: true},
     paymentterm: {type: String, required: true},
-    ordertime: {type: String, required: true}
+    ordertime: {type: String, required: true},
+    login: {type: String, required: true}
      
     
 })
