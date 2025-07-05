@@ -20,6 +20,7 @@ const Customers = require("./models/Customers")
 const Salessites = require("./models/Salessites")
 const Orders = require("./models/Orders")
 const Taxdatas = require("./models/Taxdatas")
+const Invoices = require("./models/Invoices")
 
 
 
@@ -466,6 +467,107 @@ app.put("/taxdatas/:id", async (req, res) => {
 });
 
 
+app.get("/invoices", async (req, res) => {
+  try {
+    const invoices = await Invoices.find();
+    res.json(invoices);
+    
+  } catch (err) {
+    res.status(400).send("Error fetching invoices");
+  }
+});
+
+
+app.post('/invoices', async (req, res) => {
+  const newInvoices = new Invoices({
+    
+    invoicenumber: req.body.invoicenumber,
+    invoicedateofissue: req.body.invoicedateofissue,
+    dateofsale: req.body.dateofsale,
+    sellercompanyname: req.body.sellercompanyname, 
+    sellercompanystreet: req.body.sellercompanystreet,
+    sellercompanypostcode: req.body.sellercompanypostcode,
+    sellercompanycity: req.body.sellercompanycity,
+    sellercompanynip: req.body.sellercompanynip,
+    sellercompanyregon: req.body.sellercompanyregon,
+    customername: req.body.customername,
+    customersurname: req.body.customersurname,
+    customerstreet: req.body.customerstreet,
+    customerpostcode: req.body.customerpostcode,
+    customercity: req.body.customercity,
+    customercompanyname: req.body.customercompanyname,
+    customercompanystreet: req.body.customercompanystreet,   
+    customercompanypostcode: req.body.customercompanypostcode,
+    customercompanycity: req.body.customercompanycity,
+    customerinvoice: req.body.customerinvoice,   
+    customercompanynip: req.body.customercompanynip,
+    customercompanyregon: req.body.customercompanyregon,
+    ordercontent: req.body.ordercontent,
+    orderamount: req.body.orderamount,
+    basisforvatexemption: req.body.basisforvatexemption,
+    paymentterm: req.body.paymentterm,
+    ordertime: req.body.ordertime
+     
+  })
+  try {
+    await newInvoices.save();
+    res.status(201).json(newInvoices);
+  } catch (err) {
+    res.status(400).send("Error adding invoice");
+  }
+})
+
+
+
+app.put("/invoices/:id", async (req, res) => {
+  try {
+    const updatedInvoice = await Invoices.findByIdAndUpdate(
+      req.params.id,  // Znajdź element po ID
+      { invoicenumber: req.body.invoicenumber,
+    invoicedateofissue: req.body.invoicedateofissue,
+    dateofsale: req.body.dateofsale,
+    sellercompanyname: req.body.sellercompanyname, 
+    sellercompanystreet: req.body.sellercompanystreet,
+    sellercompanypostcode: req.body.sellercompanypostcode,
+    sellercompanycity: req.body.sellercompanycity,
+    sellercompanynip: req.body.sellercompanynip,
+    sellercompanyregon: req.body.sellercompanyregon,
+    customername: req.body.customername,
+    customersurname: req.body.customersurname,
+    customerstreet: req.body.customerstreet,
+    customerpostcode: req.body.customerpostcode,
+    customercity: req.body.customercity,
+    customercompanyname: req.body.customercompanyname,
+    customercompanystreet: req.body.customercompanystreet,   
+    customercompanypostcode: req.body.customercompanypostcode,
+    customercompanycity: req.body.customercompanycity,
+    customerinvoice: req.body.customerinvoice,   
+    customercompanynip: req.body.customercompanynip,
+    customercompanyregon: req.body.customercompanyregon,
+    ordercontent: req.body.ordercontent,
+    orderamount: req.body.orderamount,
+    basisforvatexemption: req.body.basisforvatexemption,
+    paymentterm: req.body.paymentterm,
+    ordertime: req.body.ordertime
+    },  // Zaktualizuj dane
+      { new: true }  // Zwróć zaktualizowany obiekt
+    );
+    res.json(updatedInvoice);
+  } catch (err) {
+    res.status(400).send("Error updating invoice");
+  }
+});
+
+
+
+app.delete("/invoices/:id", async (req, res) => {
+  try {
+    const invoices = await Invoices.findByIdAndDelete(req.params.id);
+    res.json({ message: "Invoices deleted", invoices });
+  } catch (err) {
+    res.status(400).send("Error deleting invoices");
+  }
+});
 
 
 // Uruchamiamy serwer
