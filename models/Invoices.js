@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const invoicesSchema = new mongoose.Schema({
-    invoicenumber: {type: Number, required: true},
+    invoicenumber: {type: String, required: true},
     invoicedateofissue: {type: String, required: true},
     dateofsale: {type: String, required: true},
     sellercompanyname: {type: String, required: true},
