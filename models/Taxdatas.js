@@ -10,6 +10,7 @@ const taxdatasSchema = new mongoose.Schema({
     invoicesactualnumber: {type: Number, required: true},
     vatpercentage: {type: Number, required: true},
     basisforvatexemption: {type: String, required: true},
+    lastReset: { type: String, required: false }, 
     
 })
 
