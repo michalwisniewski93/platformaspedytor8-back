@@ -24,7 +24,6 @@ const Invoices = require("./models/Invoices")
 
 
 
-
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -57,11 +56,44 @@ const upload = multer({ storage: storage });
 app.use(express.static('public'));
 
 
+// === POMOCNICZA FUNKCJA DO RESETOWANIA invoicesactualnumber ===
+const resetInvoicesNumber = async () => {
+  try {
+    const doc = await Taxdatas.findById("6867cecac69b1bd9988c38d8");
+    if (!doc) return;
+
+    const today = new Date();
+    const firstDayThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastReset = doc.lastReset ? new Date(doc.lastReset) : null;
+
+    const alreadyReset = lastReset &&
+      lastReset.getFullYear() === today.getFullYear() &&
+      lastReset.getMonth() === today.getMonth();
+
+    if (!alreadyReset) {
+      doc.invoicesactualnumber = 0;
+      doc.lastReset = today;
+      await doc.save();
+      console.log("✅ invoicesactualnumber zresetowane na 0");
+    } else {
+      console.log("ℹ️ Już było zresetowane w tym miesiącu");
+    }
+  } catch (err) {
+    console.error("❌ Błąd resetowania invoicesactualnumber:", err);
+  }
+};
+
+
+
+
+
 // MongoDB połączenie
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("Connected to MongoDB"))
+  .then(() => {
+    console.log("Connected to MongoDB");
+    resetInvoicesNumber(); // <<< WYWOŁANIE FUNKCJI PO POŁĄCZENIU
+  })
   .catch((err) => console.log("MongoDB connection error:", err));
-
 
 app.get("/", (req, res) => {
   res.send("Hello from Express!");
@@ -343,6 +375,8 @@ app.get('/check-payment-status', async (req, res) => {
   }
 });
 
+
+
 app.get("/orders", async (req, res) => {
   try {
     const orders = await Orders.find();
@@ -507,7 +541,7 @@ app.post('/invoices', async (req, res) => {
     basisforvatexemption: req.body.basisforvatexemption,
     paymentterm: req.body.paymentterm,
     ordertime: req.body.ordertime,
-    login: req.body.login
+    login: req.body.login,
      
   })
   try {
