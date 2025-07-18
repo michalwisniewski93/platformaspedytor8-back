@@ -606,6 +606,120 @@ app.delete("/invoices/:id", async (req, res) => {
 });
 
 
+
+app.get("/correctives", async (req, res) => {
+  try {
+    const correctives = await Correctives.find();
+    res.json(correctives);
+    
+  } catch (err) {
+    res.status(400).send("Error fetching correctives");
+  }
+});
+
+
+app.post('/correctives', async (req, res) => {
+  const newCorrectives = new Correctives({
+    numberofcorrectiveinvoice: req.body.numberofcorrectiveinvoice,
+    dateofissuecorrectiveinvoice: req.body.dateofissuecorrectiveinvoice,
+    dateofsale: req.body.dateofsale,
+    numberofnativeinvoice: req.body.numberofnativeinvoice,
+    sellercompanyname: req.body.sellercompanyname,
+    sellercompanystreet: req.body.sellercompanystreet,
+    sellercompanypostcode: req.body.sellercompanypostcode,
+    sellercompanycity: req.body.sellercompanycity,
+    sellercompanynip: req.body.sellercompanynip,
+    sellercompanyregon: req.body.sellercompanyregon,
+    customername: req.body.customername,
+    customersurname: req.body.customersurname,
+    customerstreet: req.body.customerstreet,
+    customerpostcode: req.body.customerpostcode,
+    customercity: req.body.customercity,
+    customercompanyname: req.body.customercompanyname,
+    customercompanystreet: req.body.customercompanystreet,
+    customercompanypostcode: req.body.customercompanypostcode,
+    customercompanycity: req.body.customercompanycity,
+    invoice: req.body.invoice,
+    customercompanynip: req.body.customercompanynip,
+    customercompanyregon: req.body.customercompanyregon,
+    correctionreason: req.body.correctionreason,
+    correcteditems: req.body.correcteditems,
+    summary: req.body.summary,
+    orderamount: req.body.orderamount,
+    basisforvatexemption: req.body.basisforvatexemption,
+    paymentterm: req.body.paymentterm,
+    ordertime: req.body.ordertime,
+    login: req.body.login,
+  
+     
+  })
+  try {
+    await newCorrectives.save();
+    res.status(201).json(newCorrectives);
+  } catch (err) {
+    res.status(400).send("Error adding corrective");
+  }
+})
+
+
+
+app.put("/correctives/:id", async (req, res) => {
+  try {
+    const updatedCorrective = await Correctives.findByIdAndUpdate(
+      req.params.id,  // Znajdź element po ID
+      { 
+    
+    numberofcorrectiveinvoice: req.body.numberofcorrectiveinvoice,
+    dateofissuecorrectiveinvoice: req.body.dateofissuecorrectiveinvoice,
+    dateofsale: req.body.dateofsale,
+    numberofnativeinvoice: req.body.numberofnativeinvoice,
+    sellercompanyname: req.body.sellercompanyname,
+    sellercompanystreet: req.body.sellercompanystreet,
+    sellercompanypostcode: req.body.sellercompanypostcode,
+    sellercompanycity: req.body.sellercompanycity,
+    sellercompanynip: req.body.sellercompanynip,
+    sellercompanyregon: req.body.sellercompanyregon,
+    customername: req.body.customername,
+    customersurname: req.body.customersurname,
+    customerstreet: req.body.customerstreet,
+    customerpostcode: req.body.customerpostcode,
+    customercity: req.body.customercity,
+    customercompanyname: req.body.customercompanyname,
+    customercompanystreet: req.body.customercompanystreet,
+    customercompanypostcode: req.body.customercompanypostcode,
+    customercompanycity: req.body.customercompanycity,
+    invoice: req.body.invoice,
+    customercompanynip: req.body.customercompanynip,
+    customercompanyregon: req.body.customercompanyregon,
+    correctionreason: req.body.correctionreason,
+    correcteditems: req.body.correcteditems,
+    summary: req.body.summary,
+    orderamount: req.body.orderamount,
+    basisforvatexemption: req.body.basisforvatexemption,
+    paymentterm: req.body.paymentterm,
+    ordertime: req.body.ordertime,
+    login: req.body.login,
+    },  // Zaktualizuj dane
+      { new: true }  // Zwróć zaktualizowany obiekt
+    );
+    res.json(updatedCorrective);
+  } catch (err) {
+    res.status(400).send("Error updating corrective");
+  }
+});
+
+
+
+app.delete("/correctives/:id", async (req, res) => {
+  try {
+    const correctives = await Correctives.findByIdAndDelete(req.params.id);
+    res.json({ message: "Correctives deleted", correctives });
+  } catch (err) {
+    res.status(400).send("Error deleting correctives");
+  }
+});
+
+
 // Uruchamiamy serwer
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
