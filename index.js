@@ -347,8 +347,8 @@ app.post('/create-checkout-session', async (req, res) => {
       payment_method_types: ['card', 'blik'],
       mode: 'payment',
       line_items,
-      success_url: 'http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'http://localhost:3000/cancel',
+      success_url: 'https://platformaspedytor21-front.vercel.app/success?session_id={CHECKOUT_SESSION_ID}',
+      cancel_url: 'https://platformaspedytor21-front.vercel.app/cancel',
       locale: 'pl',  
     });
 
