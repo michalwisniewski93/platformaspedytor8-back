@@ -131,6 +131,11 @@ app.get("/", (req, res) => {
   res.send("Hello from Express!");
 });
 
+app.get('/test-cors', (req, res) => {
+  res.json({ success: true, origin: req.headers.origin });
+});
+
+
 app.get("/login", async (req, res) => {
   try {
     const logins = await Login.find();
