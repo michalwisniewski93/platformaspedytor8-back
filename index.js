@@ -38,7 +38,31 @@ const port = process.env.PORT || 5000;
 
 
 // Middleware
-app.use(cors());
+
+
+const allowedOrigins = [
+  'https://platformaspedytor24-front.vercel.app',
+  'https://spedytorszkolenia.pl',
+  'https://www.spedytorszkolenia.pl',
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Zezwól na brak origin w przypadku np. zapytań Postman / SSR
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // jeśli używasz cookies/session auth
+}));
+
+
+
+
+
 app.use(express.json());
 
 
