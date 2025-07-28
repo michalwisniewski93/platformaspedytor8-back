@@ -378,14 +378,19 @@ app.post('/create-checkout-session', async (req, res) => {
     quantity: 1,
   }));
 
+  // Pobierz domenę z nagłówka lub ustaw domyślną
+  const domain = req.headers.origin?.startsWith('https://') 
+    ? req.headers.origin 
+    : 'https://spedytorszkolenia.pl'; // fallback, jeśli brak nagłówka
+
   try {
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card', 'blik'],
       mode: 'payment',
       line_items,
-      success_url: 'https://spedytorszkolenia.pl/success?session_id={CHECKOUT_SESSION_ID}',
-      cancel_url: 'https://spedytorszkolenia.pl/cancel',
-      locale: 'pl',  
+      success_url: `${domain}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${domain}/cancel`,
+      locale: 'pl',
     });
 
     res.json({ id: session.id });
@@ -393,6 +398,7 @@ app.post('/create-checkout-session', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 app.get('/check-payment-status', async (req, res) => {
   const sessionId = req.query.sessionId;
