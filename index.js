@@ -48,16 +48,23 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Zezwól na brak origin w przypadku np. zapytań Postman / SSR
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
+
+    // 🧼 Usuń końcowy ukośnik
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    console.log(`CORS check: origin=${origin} | normalized=${normalizedOrigin}`);
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      console.log('✅ Origin allowed');
       return callback(null, true);
-    } else {
-      return callback(new Error('Not allowed by CORS'));
     }
+
+    console.warn(`❌ Origin blocked: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
   },
-  credentials: true, // jeśli używasz cookies/session auth
+  credentials: true,
 }));
+
 
 
 
