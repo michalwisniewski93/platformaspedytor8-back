@@ -363,49 +363,41 @@ app.put("/salessites/:id", async (req, res) => {
 });
 
 
-
 app.post('/create-checkout-session', async (req, res) => {
-  try {
-    console.log('REQ BODY:', req.body);
-    const { items } = req.body;
+  const items = req.body.items;
 
-    if (!items || items.length === 0) {
-      return res.status(400).json({ error: 'Brak produktów w koszyku' });
-    }
-
-    // Mapowanie koszyka do formatu Stripe
-    const line_items = items.map(item => ({
-      price_data: {
-        currency: 'pln',
-        product_data: {
-          name: item.title,
-          description: item.author,
-          images: [`https://platformaspedytor8-back-production.up.railway.app/${item.imageurl}`]
-        },
-        unit_amount: Math.round(parseFloat(item.price) * 100), // w groszach
+  const line_items = items.map(item => ({
+    price_data: {
+      currency: 'pln',
+      product_data: {
+        name: item.title,
+        images: [`https://platformaspedytor8-back.vercel.app/${item.imageurl}`],
       },
-      quantity: 1,
-    }));
+      unit_amount: Math.round(parseFloat(item.price) * 100), // zł -> grosze
+    },
+    quantity: 1,
+  }));
 
-    // Tworzymy sesję Checkout
+  // Pobierz domenę z nagłówka lub ustaw domyślną
+  const domain = req.headers.origin?.startsWith('https://') 
+    ? req.headers.origin 
+    : 'https://spedytorszkolenia.pl'; // fallback, jeśli brak nagłówka
+
+  try {
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items,
+      payment_method_types: ['card', 'blik'],
       mode: 'payment',
-      success_url: 'https://spedytorszkolenia.pl/success',
-      cancel_url: 'https://spedytorszkolenia.pl/cancel',
+      line_items,
+      success_url: `${domain}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${domain}/cancel`,
+      locale: 'pl',
     });
-    console.log('SESSION:', session);
 
     res.json({ id: session.id });
-
-  } catch (error) {
-    console.error('Błąd Stripe:', error);
-    res.status(500).json({ error: 'Błąd przy tworzeniu sesji Stripe' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
-
-
 
 
 app.get('/check-payment-status', async (req, res) => {
