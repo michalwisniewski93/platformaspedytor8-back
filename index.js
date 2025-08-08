@@ -395,6 +395,7 @@ app.post('/create-checkout-session', async (req, res) => {
       success_url: 'https://spedytorszkolenia.pl/success',
       cancel_url: 'https://spedytorszkolenia.pl/cancel',
     });
+    console.log('SESSION:', session);
 
     res.json({ id: session.id });
 
