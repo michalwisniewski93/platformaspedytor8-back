@@ -366,6 +366,7 @@ app.put("/salessites/:id", async (req, res) => {
 
 app.post('/create-checkout-session', async (req, res) => {
   try {
+    console.log('REQ BODY:', req.body);
     const { items } = req.body;
 
     if (!items || items.length === 0) {
