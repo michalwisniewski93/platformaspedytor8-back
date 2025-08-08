@@ -1,6 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const stripe = require('stripe')(process.env.STRIPE_PUBLIC);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const cors = require("cors");
 
 
