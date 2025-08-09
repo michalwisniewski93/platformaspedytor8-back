@@ -372,7 +372,7 @@ app.post('/create-checkout-session', async (req, res) => {
       currency: 'pln',
       product_data: {
         name: item.title,
-        images: [`https://platformaspedytor8-back.vercel.app/${item.imageurl}`],
+        images: [`https://platformaspedytor8-back.vercel.app${item.imageurl}`],
       },
       unit_amount: Math.round(parseFloat(item.price) * 100), // zł -> grosze
     },
