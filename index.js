@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-console.log('Stripe key starts with:', process.env.STRIPE_SECRET_KEY?.slice(0, 8));
+
 const cors = require("cors");
 
 
