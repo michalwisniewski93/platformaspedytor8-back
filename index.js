@@ -23,6 +23,7 @@ const Orders = require("./models/Orders")
 const Taxdatas = require("./models/Taxdatas")
 const Invoices = require("./models/Invoices")
 const Correctives = require("./models/Correctives")
+const Referral = require("./models/Referral")
 
 
 
@@ -761,6 +762,27 @@ app.delete("/correctives/:id", async (req, res) => {
   } catch (err) {
     res.status(400).send("Error deleting correctives");
   }
+});
+
+
+app.post("/api/track", async (req, res) => {
+  const { source } = req.body;
+
+  if (!source) return res.status(400).json({ error: "Brak źródła" });
+
+  await Referral.findOneAndUpdate(
+    { source },
+    { $inc: { count: 1 } },
+    { upsert: true }
+  );
+
+  res.json({ message: "Zapisano" });
+});
+
+// 📌 API do pobrania statystyk
+app.get("/api/stats", async (req, res) => {
+  const stats = await Referral.find({});
+  res.json(stats);
 });
 
 
