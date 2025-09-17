@@ -1,4 +1,5 @@
 const express = require("express");
+const crypto = require("crypto");
 const mongoose = require("mongoose");
 const stripe = require('stripe')(process.env.STRIPE_NEW_SECRET);
 
@@ -75,6 +76,17 @@ app.use(cors({
 app.use(express.json());
 
 
+
+// 🔑 Zmienne środowiskowe
+const TPAY_CLIENT_ID = process.env.TPAY_CLIENT_ID;
+const TPAY_SECRET = process.env.TPAY_SECRET;
+const TPAY_WEBHOOK_SECRET = process.env.TPAY_WEBHOOK_SECRET;
+
+// osobno front i backend
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:5000";
+
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'public/static'); // Folder static
@@ -88,6 +100,33 @@ const upload = multer({ storage: storage });
 
 
 app.use(express.static('public'));
+
+
+// ============================================================
+// 1. Pobranie access_token
+// ============================================================
+async function getAccessToken() {
+  const response = await fetch("https://api.tpay.com/oauth/auth", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      client_id: TPAY_CLIENT_ID,
+      client_secret: TPAY_SECRET,
+      grant_type: "client_credentials",
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Błąd podczas pobierania access_token");
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
+
+
+
+
 
 
 // === POMOCNICZA FUNKCJA DO RESETOWANIA invoicesactualnumber ===
@@ -784,6 +823,105 @@ app.get("/api/stats", async (req, res) => {
   const stats = await Referral.find({});
   res.json(stats);
 });
+
+
+// ============================================================
+// 2. Tworzenie transakcji
+// ============================================================
+app.post("/tpay/create-transaction", async (req, res) => {
+  try {
+    const { items, totalPrice, email } = req.body;
+    const accessToken = await getAccessToken();
+
+    const response = await fetch("https://api.tpay.com/transactions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        amount: totalPrice.toFixed(2),
+        currency: "PLN",
+        description: "Zakup kursów online",
+        hiddenDescription: "Platforma spedytor",
+        payer: {
+          email: email || "test@example.com",
+        },
+        callbacks: {
+          success: `${FRONTEND_URL}/success`,
+          failure: `${FRONTEND_URL}/cancel`,
+          notification: `${BACKEND_URL}/tpay/webhook`,
+        },
+      }),
+    });
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error("Błąd przy tworzeniu transakcji:", err);
+    res.status(500).json({ error: "Błąd przy tworzeniu transakcji" });
+  }
+});
+
+// ============================================================
+// 3. Sprawdzenie statusu
+// ============================================================
+app.get("/tpay/check-status/:transactionId", async (req, res) => {
+  try {
+    const accessToken = await getAccessToken();
+    const { transactionId } = req.params;
+
+    const response = await fetch(
+      `https://api.tpay.com/transactions/${transactionId}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    console.error("Błąd przy sprawdzaniu statusu:", err);
+    res.status(500).json({ error: "Błąd przy sprawdzaniu statusu transakcji" });
+  }
+});
+
+// ============================================================
+// 4. Webhook
+// ============================================================
+app.post("/tpay/webhook", (req, res) => {
+  try {
+    const signature =
+      req.headers["x-signature"] || req.headers["signature"] || "";
+
+    const payload = JSON.stringify(req.body);
+
+    const expectedSignature = crypto
+      .createHmac("sha256", TPAY_WEBHOOK_SECRET)
+      .update(payload)
+      .digest("hex");
+
+    if (signature !== expectedSignature) {
+      console.warn("❌ Niepoprawny podpis webhooka!");
+      return res.status(400).send("Invalid signature");
+    }
+
+    console.log("✅ Webhook Tpay zweryfikowany:", req.body);
+
+    if (req.body.status === "correct" || req.body.status === "paid") {
+      console.log("💰 Transakcja opłacona, nadaję dostęp użytkownikowi...");
+      // TODO: update DB → order = paid
+    }
+
+    res.status(200).send("OK");
+  } catch (err) {
+    console.error("Błąd w webhooku:", err);
+    res.status(500).send("Server error");
+  }
+});
+
+
+
 
 
 // Uruchamiamy serwer
