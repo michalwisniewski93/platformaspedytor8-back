@@ -19,7 +19,7 @@ const ordersSchema = new mongoose.Schema({
     regulations: {type: Boolean, required: false},
     companynip: {type: String, required: false},
     companyregon: {type: String, required: false},
-    ordercontent: {type: String, required: false},
+    ordercontent: {type: Array, required: false},
     orderamount: {type: Number, required: false},
     ordertime: {type: String, required: false},
 
