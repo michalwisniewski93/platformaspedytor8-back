@@ -831,6 +831,13 @@ app.get("/api/stats", async (req, res) => {
 app.post("/tpay/create-transaction", async (req, res) => {
   try {
     const { items, totalPrice, email } = req.body;
+
+    // Bezpieczna konwersja totalPrice → number
+    const safeTotalPrice = Number(totalPrice);
+    if (isNaN(safeTotalPrice)) {
+      throw new Error("Niepoprawna wartość totalPrice");
+    }
+
     const accessToken = await getAccessToken();
 
     const response = await fetch("https://api.tpay.com/transactions", {
@@ -840,7 +847,7 @@ app.post("/tpay/create-transaction", async (req, res) => {
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
-        amount: totalPrice.toFixed(2),
+        amount: safeTotalPrice.toFixed(2), // PL: kwota w formacie "438.00"
         currency: "PLN",
         description: "Zakup kursów online",
         hiddenDescription: "Platforma spedytor",
@@ -852,16 +859,24 @@ app.post("/tpay/create-transaction", async (req, res) => {
           failure: `${FRONTEND_URL}/cancel`,
           notification: `${BACKEND_URL}/tpay/webhook`,
         },
+        // Możesz zachować inne pola items, jeśli Tpay to obsługuje
+        items: items || [], 
       }),
     });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Błąd Tpay API: ${response.status} - ${text}`);
+    }
 
     const data = await response.json();
     res.json(data);
   } catch (err) {
     console.error("Błąd przy tworzeniu transakcji:", err);
-    res.status(500).json({ error: "Błąd przy tworzeniu transakcji" });
+    res.status(500).json({ error: "Błąd przy tworzeniu transakcji", message: err.message });
   }
 });
+
 
 // ============================================================
 // 3. Sprawdzenie statusu
