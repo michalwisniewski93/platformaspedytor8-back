@@ -848,18 +848,19 @@ app.post("/tpay/create-transaction", async (req, res) => {
   try {
     const { items, totalPrice, email } = req.body;
 
-    console.log("DEBUG: items:", items);
-    console.log("DEBUG: totalPrice:", totalPrice);
-    console.log("DEBUG: email:", email);
+    console.log("DEBUG: items z frontendu:", items);
+    console.log("DEBUG: totalPrice z frontendu:", totalPrice);
+    console.log("DEBUG: email z frontendu:", email);
 
     if (!totalPrice || isNaN(totalPrice)) {
-      throw new Error(`Niepoprawna wartość totalPrice z frontendu: ${totalPrice}`);
+      throw new Error(`Niepoprawna wartość totalPrice: ${totalPrice}`);
     }
 
     const accessToken = await getAccessToken();
+    console.log("DEBUG: accessToken Tpay:", accessToken);
 
     const requestBody = {
-      amount: parseFloat(totalPrice).toFixed(2),
+      amount: parseFloat(totalPrice).toFixed(2), // np. "438.00"
       currency: "PLN",
       description: "Zakup kursów online",
       hiddenDescription: "Platforma spedytor",
@@ -873,7 +874,7 @@ app.post("/tpay/create-transaction", async (req, res) => {
       }
     };
 
-    console.log("DEBUG: Tpay request body:", requestBody);
+    console.log("DEBUG: requestBody do Tpay:", JSON.stringify(requestBody, null, 2));
 
     const response = await fetch("https://api.tpay.com/transactions", {
       method: "POST",
@@ -885,12 +886,15 @@ app.post("/tpay/create-transaction", async (req, res) => {
     });
 
     const data = await response.json();
+    console.log("DEBUG: pełna odpowiedź Tpay:", JSON.stringify(data, null, 2));
 
-    console.log("DEBUG: Tpay response:", data);
-
+    // Sprawdzenie pola transactionPaymentUrl
     if (!data || !data.transactionPaymentUrl) {
       console.error("❌ Brak transactionPaymentUrl w odpowiedzi Tpay");
-      return res.status(400).json({ error: "Brak transactionPaymentUrl z Tpay", tpayData: data });
+      return res.status(400).json({ 
+        error: "Brak transactionPaymentUrl z Tpay", 
+        tpayData: data // pełna odpowiedź Tpay dla debugu
+      });
     }
 
     // Zwracamy tylko potrzebne dane do frontendu
@@ -902,9 +906,10 @@ app.post("/tpay/create-transaction", async (req, res) => {
 
   } catch (err) {
     console.error("Błąd przy tworzeniu transakcji:", err);
-    res.status(500).json({ error: "Błąd przy tworzeniu transakcji" });
+    res.status(500).json({ error: "Błąd przy tworzeniu transakcji", details: err.message });
   }
 });
+
 
 
 // ============================================================
