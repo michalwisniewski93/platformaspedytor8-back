@@ -473,37 +473,54 @@ app.get("/orders", async (req, res) => {
 
 
 app.post('/orders', async (req, res) => {
-  console.log('DEBUG: req.body przychodzące do /orders:', req.body);
-  const newOrders = new Orders({
-    name: req.body.name,
-    surname: req.body.surname,
-    street: req.body.street,
-    postcode: req.body.postcode,
-    city: req.body.city,
-    companyname: req.body.companyname,
-    companystreet: req.body.companystreet,
-    companypostcode: req.body.companypostcode,
-    companycity: req.body.companycity,
-    email: req.body.email,
-    invoice: req.body.invoice,
-    login: req.body.login,
-    newsletter: req.body.newsletter,
-    password: req.body.password,
-    phonenumber: req.body.phonenumber,
-    regulations: req.body.regulations,
-    companynip: req.body.companynip,
-    companyregon: req.body.companyregon,
-    ordercontent: req.body.ordercontent,
-    orderamount: req.body.orderamount,
-    ordertime: req.body.ordertime,
-  })
   try {
-    await newOrders.save();
-    res.status(201).json(newOrders);
+    console.log('DEBUG: req.body przychodzące do /orders:', req.body);
+
+    const {
+      name, surname, street, postcode, city,
+      companyname, companystreet, companypostcode, companycity,
+      email, invoice, login, newsletter, password, phonenumber,
+      regulations, companynip, companyregon, ordercontent, orderamount, ordertime
+    } = req.body;
+
+    // ✅ Walidacja podstawowych pól
+    if (!email) return res.status(400).json({ error: "Brak email" });
+    if (!orderamount || isNaN(orderamount)) return res.status(400).json({ error: "Niepoprawny orderamount" });
+
+    // ✅ Parsowanie ordercontent jeśli przychodzi jako string
+    let parsedOrderContent;
+    if (typeof ordercontent === 'string') {
+      try {
+        parsedOrderContent = JSON.parse(ordercontent);
+      } catch (err) {
+        return res.status(400).json({ error: "Niepoprawny format ordercontent JSON", details: err.message });
+      }
+    } else if (Array.isArray(ordercontent)) {
+      parsedOrderContent = ordercontent;
+    } else {
+      return res.status(400).json({ error: "ordercontent musi być tablicą obiektów" });
+    }
+
+    const newOrder = new Orders({
+      name, surname, street, postcode, city,
+      companyname, companystreet, companypostcode, companycity,
+      email, invoice, login, newsletter, password, phonenumber,
+      regulations, companynip, companyregon,
+      ordercontent: parsedOrderContent,
+      orderamount,
+      ordertime,
+    });
+
+    await newOrder.save();
+
+    res.status(201).json(newOrder);
+
   } catch (err) {
-    res.status(400).send("Error adding order");
+    console.error("Błąd przy dodawaniu zamówienia:", err);
+    res.status(500).json({ error: "Błąd serwera przy dodawaniu zamówienia", details: err.message });
   }
-})
+});
+
 
 
 
