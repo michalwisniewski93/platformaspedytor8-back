@@ -473,6 +473,7 @@ app.get("/orders", async (req, res) => {
 
 
 app.post('/orders', async (req, res) => {
+  console.log('DEBUG: req.body przychodzące do /orders:', req.body);
   const newOrders = new Orders({
     name: req.body.name,
     surname: req.body.surname,
