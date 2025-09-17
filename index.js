@@ -824,7 +824,6 @@ app.get("/api/stats", async (req, res) => {
   const stats = await Referral.find({});
   res.json(stats);
 });
-
 // ============================================================
 // 2. Tworzenie transakcji (Tpay)
 // ============================================================
@@ -872,19 +871,23 @@ app.post("/tpay/create-transaction", async (req, res) => {
 
     console.log("DEBUG: Tpay response:", data);
 
-    if (!data || !data.redirectUrl) {
-      console.error("❌ Brak redirectUrl w odpowiedzi Tpay");
-      return res.status(400).json({ error: "Brak redirectUrl z Tpay", tpayData: data });
+    if (!data || !data.transactionPaymentUrl) {
+      console.error("❌ Brak transactionPaymentUrl w odpowiedzi Tpay");
+      return res.status(400).json({ error: "Brak transactionPaymentUrl z Tpay", tpayData: data });
     }
 
-    res.json(data);
+    // Zwracamy tylko potrzebne dane do frontendu
+    res.json({
+      transactionId: data.transactionId,
+      title: data.title,
+      transactionPaymentUrl: data.transactionPaymentUrl,
+    });
 
   } catch (err) {
     console.error("Błąd przy tworzeniu transakcji:", err);
     res.status(500).json({ error: "Błąd przy tworzeniu transakcji" });
   }
 });
-
 
 
 // ============================================================
