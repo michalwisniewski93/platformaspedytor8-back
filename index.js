@@ -832,50 +832,62 @@ app.post("/tpay/create-transaction", async (req, res) => {
   try {
     const { items, totalPrice, email } = req.body;
 
-    // Bezpieczna konwersja totalPrice → number
-    const safeTotalPrice = Number(totalPrice);
-    if (isNaN(safeTotalPrice)) {
-      throw new Error("Niepoprawna wartość totalPrice");
+    // 🔹 Walidacja totalPrice
+    const safeTotalPrice = parseFloat(totalPrice);
+    if (isNaN(safeTotalPrice) || safeTotalPrice <= 0) {
+      console.error("Niepoprawna wartość totalPrice z frontendu:", totalPrice);
+      return res.status(400).json({ error: "Niepoprawna wartość totalPrice" });
     }
 
+    // 🔹 Log przychodzących danych (pomocny do debugowania)
+    console.log("DEBUG: items:", items);
+    console.log("DEBUG: totalPrice:", safeTotalPrice);
+    console.log("DEBUG: email:", email);
+
+    // 🔹 Pobranie access token
     const accessToken = await getAccessToken();
 
+    // 🔹 Przygotowanie ciała requestu do Tpay
+    const body = {
+      amount: safeTotalPrice.toFixed(2), // zawsze string w formacie 123.45
+      currency: "PLN",
+      description: "Zakup kursów online",
+      hiddenDescription: "Platforma spedytor",
+      payer: {
+        email: email || "test@example.com",
+      },
+      callbacks: {
+        success: `${FRONTEND_URL}/success`,
+        failure: `${FRONTEND_URL}/cancel`,
+        notification: `${BACKEND_URL}/tpay/webhook`,
+      },
+    };
+
+    console.log("DEBUG: Tpay request body:", body);
+
+    // 🔹 Wysyłka requestu do Tpay
     const response = await fetch("https://api.tpay.com/transactions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      body: JSON.stringify({
-        amount: safeTotalPrice.toFixed(2), // PL: kwota w formacie "438.00"
-        currency: "PLN",
-        description: "Zakup kursów online",
-        hiddenDescription: "Platforma spedytor",
-        payer: {
-          email: email || "test@example.com",
-        },
-        callbacks: {
-          success: `${FRONTEND_URL}/success`,
-          failure: `${FRONTEND_URL}/cancel`,
-          notification: `${BACKEND_URL}/tpay/webhook`,
-        },
-        // Możesz zachować inne pola items, jeśli Tpay to obsługuje
-        items: items || [], 
-      }),
+      body: JSON.stringify(body),
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Błąd Tpay API: ${response.status} - ${text}`);
-    }
-
+    // 🔹 Odczyt odpowiedzi
     const data = await response.json();
+
+    console.log("DEBUG: Tpay response:", data);
+
+    // 🔹 Zwrot odpowiedzi do frontendu
     res.json(data);
   } catch (err) {
     console.error("Błąd przy tworzeniu transakcji:", err);
-    res.status(500).json({ error: "Błąd przy tworzeniu transakcji", message: err.message });
+    res.status(500).json({ error: "Błąd przy tworzeniu transakcji" });
   }
 });
+
 
 
 // ============================================================
