@@ -935,8 +935,7 @@ app.get("/tpay/check-status/:transactionId", async (req, res) => {
 // ============================================================
 // 4. Webhook Tpay
 // ============================================================
-
-// 🔑 Parser tylko dla webhooka (x-www-form-urlencoded)
+// Parser tylko dla webhooka (x-www-form-urlencoded)
 app.use("/tpay/webhook", express.urlencoded({ extended: false }));
 
 app.post("/tpay/webhook", async (req, res) => {
@@ -944,36 +943,38 @@ app.post("/tpay/webhook", async (req, res) => {
     console.log("===== NOWY WEBHOOK =====");
     console.log("Body:", req.body);
 
-    // ✅ Sprawdzenie tr_crc (opcjonalne)
+    // Sprawdzenie tr_crc
     const expectedCrc = "Platforma spedytor";
     if (req.body.tr_crc !== expectedCrc) {
       console.warn("❌ Niepoprawny tr_crc!");
       return res.status(400).send("Invalid CRC");
     }
 
-    // ✅ Sprawdzenie statusu płatności
-    if (req.body.tr_status === "TRUE") {
+    // Status płatności
+    if (req.body.tr_status === "TRUE" || req.body.tr_status === "PAID") {
       console.log("💰 Transakcja opłacona, nadaję dostęp użytkownikowi...");
 
-      // 🔹 Aktualizacja zamówienia w DB
-      const transactionId = req.body.tr_id;
-      const order = await Orders.findOneAndUpdate(
-        { transactionId },
-        { paid: true },
-        { new: true }
-      );
+      // Szukamy zamówienia po tr_id lub e-mailu + amount
+      const order = await Orders.findOne({
+        tr_id: req.body.tr_id
+      });
 
-      if (order) {
-        console.log("✅ Zamówienie oznaczone jako opłacone:", transactionId);
-      } else {
-        console.warn("⚠️ Nie znaleziono zamówienia dla transactionId:", transactionId);
+      if (!order) {
+        console.warn("⚠️ Nie znaleziono zamówienia dla tr_id:", req.body.tr_id);
+        return res.send("TRUE"); // Tpay wymaga odpowiedzi, nawet jeśli nie znaleziono
       }
 
+      // Aktualizacja zamówienia
+      order.paid = true;
+      order.tr_id = req.body.tr_id; // zapis tr_id z webhooka
+      await order.save();
+
+      console.log("✅ Zamówienie oznaczone jako opłacone:", order._id);
     } else {
       console.log("ℹ️ Status transakcji:", req.body.tr_status);
     }
 
-    // ⚠️ Tpay wymaga odpowiedzi "TRUE"
+    // Tpay wymaga odpowiedzi "TRUE"
     res.send("TRUE");
 
   } catch (err) {
@@ -981,6 +982,7 @@ app.post("/tpay/webhook", async (req, res) => {
     res.status(500).send("FALSE");
   }
 });
+
 
 
 
