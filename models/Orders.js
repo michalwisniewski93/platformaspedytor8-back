@@ -22,6 +22,9 @@ const ordersSchema = new mongoose.Schema({
     ordercontent: {type: Array, required: false},
     orderamount: {type: Number, required: false},
     ordertime: {type: String, required: false},
+    // 🔹 Nowe pola
+  transactionId: String,
+  paid: { type: Boolean, default: false },
 
     
 })
