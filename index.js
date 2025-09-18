@@ -480,7 +480,7 @@ app.post('/orders', async (req, res) => {
       name, surname, street, postcode, city,
       companyname, companystreet, companypostcode, companycity,
       email, invoice, login, newsletter, password, phonenumber,
-      regulations, companynip, companyregon, ordercontent, orderamount, ordertime
+      regulations, companynip, companyregon, ordercontent, orderamount, ordertime 
     } = req.body;
 
     // ✅ Walidacja podstawowych pól
@@ -509,6 +509,8 @@ app.post('/orders', async (req, res) => {
       ordercontent: parsedOrderContent,
       orderamount,
       ordertime,
+      transactionId: req.body.transactionId, // 🔹 dodaj to
+  paid: false, // 🔹 domyślnie false
     });
 
     await newOrder.save();
