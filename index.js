@@ -848,19 +848,24 @@ app.post("/tpay/create-transaction", async (req, res) => {
   try {
     const { items, totalPrice, email } = req.body;
 
+    console.log("DEBUG: items z frontendu:", items);
+    console.log("DEBUG: totalPrice z frontendu:", totalPrice);
+    console.log("DEBUG: email z frontendu:", email);
+
     if (!totalPrice || isNaN(totalPrice)) {
       throw new Error(`Niepoprawna wartość totalPrice: ${totalPrice}`);
     }
 
     const accessToken = await getAccessToken();
+    console.log("DEBUG: accessToken Tpay:", accessToken);
 
-    // Pobranie domeny z nagłówka lub fallback
-    const domain = req.headers.origin?.startsWith('https://')
-      ? req.headers.origin
+    // Pobierz domenę z nagłówka lub ustaw domyślną
+    const domain = req.headers.origin?.startsWith('https://') 
+      ? req.headers.origin 
       : 'https://spedytorszkolenia.pl';
 
     const requestBody = {
-      amount: parseFloat(totalPrice).toFixed(2),
+      amount: parseFloat(totalPrice).toFixed(2), // np. "438.00"
       currency: "PLN",
       description: "Zakup kursów online",
       hiddenDescription: "Platforma spedytor",
@@ -872,11 +877,11 @@ app.post("/tpay/create-transaction", async (req, res) => {
           { url: `${BACKEND_URL}/tpay/webhook`, method: "POST" }
         ]
       },
-      redirect: {
-        successUrl: `${domain}/success?transactionId={transactionId}`,
-        cancelUrl: `${domain}/cancel`
-      }
+      returnUrl: `${domain}/success`, // przekierowanie po udanej płatności
+      cancelUrl: `${domain}/cancel`   // przekierowanie po anulowanej lub nieudanej płatności
     };
+
+    console.log("DEBUG: requestBody do Tpay:", JSON.stringify(requestBody, null, 2));
 
     const response = await fetch("https://api.tpay.com/transactions", {
       method: "POST",
@@ -888,18 +893,19 @@ app.post("/tpay/create-transaction", async (req, res) => {
     });
 
     const data = await response.json();
+    console.log("DEBUG: pełna odpowiedź Tpay:", JSON.stringify(data, null, 2));
 
     if (!data || !data.transactionPaymentUrl) {
-      console.error("❌ Brak transactionPaymentUrl w odpowiedzi Tpay:", data);
-      return res.status(400).json({
-        error: "Brak transactionPaymentUrl z Tpay",
+      console.error("❌ Brak transactionPaymentUrl w odpowiedzi Tpay");
+      return res.status(400).json({ 
+        error: "Brak transactionPaymentUrl z Tpay", 
         tpayData: data
       });
     }
 
-    // Zwracamy potrzebne dane do frontendu
     res.json({
       transactionId: data.transactionId,
+      title: data.title,
       transactionPaymentUrl: data.transactionPaymentUrl,
     });
 
