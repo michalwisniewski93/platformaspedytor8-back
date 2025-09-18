@@ -22,8 +22,8 @@ const ordersSchema = new mongoose.Schema({
     ordercontent: {type: Array, required: false},
     orderamount: {type: Number, required: false},
     ordertime: {type: String, required: false},
-    // 🔹 Nowe pola
-  transactionId: String,
+    transactionId: String, // Tpay "ta_…" z frontendu
+  tr_id: String,         // Tpay "TR-…" z webhooka
   paid: { type: Boolean, default: false },
 
     
