@@ -967,7 +967,7 @@ app.post("/tpay/webhook", async (req, res) => {
     }
 
     // ✅ Sprawdzenie statusu płatności
-    if (req.body.tr_status === "PAID") {
+    if (req.body.tr_status === "TRUE") {
       console.log("💰 Transakcja opłacona, nadaję dostęp użytkownikowi...");
 
       // 🔹 Aktualizacja zamówienia w DB
