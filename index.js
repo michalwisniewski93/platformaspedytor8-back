@@ -951,7 +951,6 @@ app.get("/tpay/check-status/:transactionId", async (req, res) => {
 // 4. Webhook Tpay
 // ============================================================
 
-
 // 🔑 Parser tylko dla webhooka (x-www-form-urlencoded)
 app.use("/tpay/webhook", express.urlencoded({ extended: false }));
 
@@ -960,7 +959,7 @@ app.post("/tpay/webhook", async (req, res) => {
     console.log("===== NOWY WEBHOOK =====");
     console.log("Body:", req.body);
 
-    // ✅ Sprawdzenie tr_crc (opcjonalne, dla pewności, że to Twój webhook)
+    // ✅ Sprawdzenie tr_crc (opcjonalne)
     const expectedCrc = "Platforma spedytor";
     if (req.body.tr_crc !== expectedCrc) {
       console.warn("❌ Niepoprawny tr_crc!");
@@ -971,8 +970,19 @@ app.post("/tpay/webhook", async (req, res) => {
     if (req.body.tr_status === "PAID") {
       console.log("💰 Transakcja opłacona, nadaję dostęp użytkownikowi...");
 
-      // Tutaj aktualizujesz zamówienie w DB
-      // Przykład: Orders.findOneAndUpdate({ transactionId: req.body.tr_id }, { paid: true })
+      // 🔹 Aktualizacja zamówienia w DB
+      const transactionId = req.body.tr_id;
+      const order = await Orders.findOneAndUpdate(
+        { transactionId },
+        { paid: true },
+        { new: true }
+      );
+
+      if (order) {
+        console.log("✅ Zamówienie oznaczone jako opłacone:", transactionId);
+      } else {
+        console.warn("⚠️ Nie znaleziono zamówienia dla transactionId:", transactionId);
+      }
 
     } else {
       console.log("ℹ️ Status transakcji:", req.body.tr_status);
