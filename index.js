@@ -474,32 +474,18 @@ app.get("/orders", async (req, res) => {
 
 app.post('/orders', async (req, res) => {
   try {
-    console.log('DEBUG: req.body przychodzące do /orders:', req.body);
-
     const {
       name, surname, street, postcode, city,
       companyname, companystreet, companypostcode, companycity,
       email, invoice, login, newsletter, password, phonenumber,
-      regulations, companynip, companyregon, ordercontent, orderamount, ordertime 
+      regulations, companynip, companyregon, ordercontent, orderamount, ordertime,
+      transactionId // to jest "ta_…" z frontendu
     } = req.body;
 
-    // ✅ Walidacja podstawowych pól
     if (!email) return res.status(400).json({ error: "Brak email" });
     if (!orderamount || isNaN(orderamount)) return res.status(400).json({ error: "Niepoprawny orderamount" });
 
-    // ✅ Parsowanie ordercontent jeśli przychodzi jako string
-    let parsedOrderContent;
-    if (typeof ordercontent === 'string') {
-      try {
-        parsedOrderContent = JSON.parse(ordercontent);
-      } catch (err) {
-        return res.status(400).json({ error: "Niepoprawny format ordercontent JSON", details: err.message });
-      }
-    } else if (Array.isArray(ordercontent)) {
-      parsedOrderContent = ordercontent;
-    } else {
-      return res.status(400).json({ error: "ordercontent musi być tablicą obiektów" });
-    }
+    let parsedOrderContent = Array.isArray(ordercontent) ? ordercontent : JSON.parse(ordercontent || "[]");
 
     const newOrder = new Orders({
       name, surname, street, postcode, city,
@@ -509,12 +495,11 @@ app.post('/orders', async (req, res) => {
       ordercontent: parsedOrderContent,
       orderamount,
       ordertime,
-      transactionId: req.body.transactionId, // 🔹 dodaj to
-  paid: false, // 🔹 domyślnie false
+      transactionId,
+      paid: false, // domyślnie
     });
 
     await newOrder.save();
-
     res.status(201).json(newOrder);
 
   } catch (err) {
