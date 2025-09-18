@@ -950,48 +950,35 @@ app.get("/tpay/check-status/:transactionId", async (req, res) => {
 // ============================================================
 
 
-
-// 🔑 parser tylko dla webhooka (x-www-form-urlencoded)
+// 🔑 Parser tylko dla webhooka (x-www-form-urlencoded)
 app.use("/tpay/webhook", express.urlencoded({ extended: false }));
 
-app.post("/tpay/webhook", (req, res) => {
+app.post("/tpay/webhook", async (req, res) => {
   try {
-    // 🔍 Loguj wszystko co przychodzi
     console.log("===== NOWY WEBHOOK =====");
-    console.log("Headers:", req.headers);
     console.log("Body:", req.body);
 
-    // surowe dane do podpisu
-    const rawBody = new URLSearchParams(req.body).toString();
-    console.log("RawBody:", rawBody);
-
-    const signature =
-      req.headers["x-signature"] || req.headers["signature"] || "";
-    console.log("Signature z nagłówka:", signature);
-
-    const expectedSignature = crypto
-      .createHmac("sha256", TPAY_WEBHOOK_SECRET)
-      .update(rawBody)
-      .digest("hex");
-
-    console.log("Expected signature:", expectedSignature);
-
-    if (signature !== expectedSignature) {
-      console.warn("❌ Niepoprawny podpis webhooka!");
-      return res.status(400).send("Invalid signature");
+    // ✅ Sprawdzenie tr_crc (opcjonalne, dla pewności, że to Twój webhook)
+    const expectedCrc = "Platforma spedytor";
+    if (req.body.tr_crc !== expectedCrc) {
+      console.warn("❌ Niepoprawny tr_crc!");
+      return res.status(400).send("Invalid CRC");
     }
 
-    console.log("✅ Webhook Tpay zweryfikowany OK");
+    // ✅ Sprawdzenie statusu płatności
+    if (req.body.tr_status === "PAID") {
+      console.log("💰 Transakcja opłacona, nadaję dostęp użytkownikowi...");
 
-    if (req.body.tr_status === "PAID" || req.body.status === "correct") {
-      console.log("💰 Transakcja opłacona – tutaj nadaj dostęp użytkownikowi...");
-      // TODO: update DB → np. oznaczenie ordera jako paid
+      // Tutaj aktualizujesz zamówienie w DB
+      // Przykład: Orders.findOneAndUpdate({ transactionId: req.body.tr_id }, { paid: true })
+
     } else {
-      console.log("ℹ️ Status transakcji:", req.body.tr_status || req.body.status);
+      console.log("ℹ️ Status transakcji:", req.body.tr_status);
     }
 
     // ⚠️ Tpay wymaga odpowiedzi "TRUE"
     res.send("TRUE");
+
   } catch (err) {
     console.error("Błąd w webhooku:", err);
     res.status(500).send("FALSE");
