@@ -470,7 +470,6 @@ app.get("/orders", async (req, res) => {
     res.status(400).send("Error fetching orders");
   }
 });
-
 app.post('/orders', async (req, res) => {
   try {
     console.log("DEBUG: req.body przychodzące do /orders:", req.body);
@@ -480,8 +479,12 @@ app.post('/orders', async (req, res) => {
       companyname, companystreet, companypostcode, companycity,
       email, invoice, login, newsletter, password, phonenumber,
       regulations, companynip, companyregon,
-      ordercontent, orderamount
+      ordercontent, orderamount, transactionId, title
     } = req.body;
+
+    if (!transactionId || !title) {
+      return res.status(400).json({ error: "Brak transactionId lub title. Najpierw utwórz transakcję Tpay!" });
+    }
 
     const newOrder = new Orders({
       name, surname, street, postcode, city,
@@ -490,9 +493,9 @@ app.post('/orders', async (req, res) => {
       regulations, companynip, companyregon,
       ordercontent, orderamount,
       ordertime: new Date(),
-      paid: false,        // płatność dopiero po webhooku
-      transactionId: null,
-      title: null
+      transactionId,
+      title,
+      paid: false
     });
 
     await newOrder.save();
@@ -504,6 +507,8 @@ app.post('/orders', async (req, res) => {
     res.status(500).json({ error: "Błąd podczas zapisywania zamówienia" });
   }
 });
+
+
 
 
 
@@ -943,18 +948,25 @@ app.post('/tpay/webhook', async (req, res) => {
 
     const { tr_id, tr_status, tr_email } = req.body;
 
-    // Szukamy zamówienia po title (publiczny identyfikator transakcji Tpay)
-    let order = await Orders.findOne({ title: tr_id });
+    // Szukamy zamówienia po transactionId lub title
+    let order = await Orders.findOne({
+      $or: [
+        { transactionId: tr_id }, // np. ta_dbkalWrL5XvoJ12Y
+        { title: tr_id }           // np. TR-6N2U-J5NA5FX
+      ]
+    });
 
     if (!order) {
       console.warn(`⚠️ Nie znaleziono zamówienia dla tr_id: ${tr_id}`);
       return res.status(404).send('Order not found');
     }
 
-    if (tr_status === 'TRUE') {
+    if (tr_status === 'TRUE' && !order.paid) {
       order.paid = true;
       await order.save();
-      console.log("💰 Transakcja opłacona — zamówienie oznaczone jako paid");
+      console.log(`💰 Transakcja opłacona — zamówienie ${order._id} oznaczone jako paid`);
+
+      // Tutaj możesz np. nadać dostęp użytkownikowi lub wysłać maila
     }
 
     res.status(200).send('OK');
