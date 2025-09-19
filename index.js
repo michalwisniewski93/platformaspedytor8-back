@@ -471,40 +471,37 @@ app.get("/orders", async (req, res) => {
   }
 });
 
-
 app.post('/orders', async (req, res) => {
   try {
+    console.log("DEBUG: req.body przychodzące do /orders:", req.body);
+
     const {
       name, surname, street, postcode, city,
       companyname, companystreet, companypostcode, companycity,
       email, invoice, login, newsletter, password, phonenumber,
-      regulations, companynip, companyregon, ordercontent, orderamount, ordertime,
-      transactionId, tr_id
+      regulations, companynip, companyregon,
+      ordercontent, orderamount
     } = req.body;
-
-    if (!email) return res.status(400).json({ error: "Brak email" });
-    if (!orderamount || isNaN(orderamount)) return res.status(400).json({ error: "Niepoprawny orderamount" });
-
-    let parsedOrderContent = Array.isArray(ordercontent) ? ordercontent : JSON.parse(ordercontent || "[]");
 
     const newOrder = new Orders({
       name, surname, street, postcode, city,
       companyname, companystreet, companypostcode, companycity,
       email, invoice, login, newsletter, password, phonenumber,
       regulations, companynip, companyregon,
-      ordercontent: parsedOrderContent,
-      orderamount,
-      ordertime,
-      transactionId: tr_id || transactionId || null, // 🔑 ujednolicone
-      paid: false,
+      ordercontent, orderamount,
+      ordertime: new Date(),
+      paid: false,        // płatność dopiero po webhooku
+      transactionId: null,
+      title: null
     });
 
     await newOrder.save();
-    res.status(201).json(newOrder);
+    console.log("✅ Zamówienie zapisane:", newOrder);
 
+    res.status(201).json(newOrder);
   } catch (err) {
-    console.error("Błąd przy dodawaniu zamówienia:", err);
-    res.status(500).json({ error: "Błąd serwera przy dodawaniu zamówienia", details: err.message });
+    console.error("❌ Błąd w /orders:", err);
+    res.status(500).json({ error: "Błąd podczas zapisywania zamówienia" });
   }
 });
 
@@ -939,51 +936,34 @@ app.get("/tpay/check-status/:transactionId", async (req, res) => {
 // Parser tylko dla webhooka (x-www-form-urlencoded)
 // Parser tylko dla webhooka (x-www-form-urlencoded)
 app.use("/tpay/webhook", express.urlencoded({ extended: false }));
-
-app.post("/tpay/webhook", async (req, res) => {
+app.post('/tpay/webhook', async (req, res) => {
   try {
     console.log("===== NOWY WEBHOOK =====");
     console.log("Body:", req.body);
 
-    // Sprawdzenie CRC
-    const expectedCrc = "Platforma spedytor";
-    if (req.body.tr_crc !== expectedCrc) {
-      console.warn("❌ Niepoprawny tr_crc!");
-      return res.status(400).send("Invalid CRC");
+    const { tr_id, tr_status, tr_email } = req.body;
+
+    // Szukamy zamówienia po title (publiczny identyfikator transakcji Tpay)
+    let order = await Orders.findOne({ title: tr_id });
+
+    if (!order) {
+      console.warn(`⚠️ Nie znaleziono zamówienia dla tr_id: ${tr_id}`);
+      return res.status(404).send('Order not found');
     }
 
-    // Status płatności
-    if (req.body.tr_status === "TRUE" || req.body.tr_status === "PAID") {
-      console.log("💰 Transakcja opłacona, nadaję dostęp użytkownikowi...");
-
-      const transactionId = req.body.tr_id || req.body.transactionId;
-
-      // Szukamy zamówienia po transactionId
-      const order = await Orders.findOne({ transactionId });
-
-      if (!order) {
-        console.warn("⚠️ Nie znaleziono zamówienia dla transactionId:", transactionId);
-        return res.send("TRUE"); // zawsze TRUE dla Tpay
-      }
-
-      // Aktualizacja zamówienia
+    if (tr_status === 'TRUE') {
       order.paid = true;
-      order.transactionId = transactionId;
       await order.save();
-
-      console.log("✅ Zamówienie oznaczone jako opłacone:", order._id);
-    } else {
-      console.log("ℹ️ Status transakcji:", req.body.tr_status);
+      console.log("💰 Transakcja opłacona — zamówienie oznaczone jako paid");
     }
 
-    // Tpay wymaga odpowiedzi "TRUE"
-    res.send("TRUE");
-
+    res.status(200).send('OK');
   } catch (err) {
-    console.error("Błąd w webhooku:", err);
-    res.status(500).send("FALSE");
+    console.error("❌ Błąd w webhooku:", err);
+    res.status(500).send('Server error');
   }
 });
+
 
 
 
