@@ -479,7 +479,7 @@ app.post('/orders', async (req, res) => {
       companyname, companystreet, companypostcode, companycity,
       email, invoice, login, newsletter, password, phonenumber,
       regulations, companynip, companyregon, ordercontent, orderamount, ordertime,
-      transactionId // to jest "ta_…" z frontendu
+      transactionId, tr_id
     } = req.body;
 
     if (!email) return res.status(400).json({ error: "Brak email" });
@@ -495,8 +495,8 @@ app.post('/orders', async (req, res) => {
       ordercontent: parsedOrderContent,
       orderamount,
       ordertime,
-      transactionId,
-      paid: false, // domyślnie
+      transactionId: tr_id || transactionId || null, // 🔑 ujednolicone
+      paid: false,
     });
 
     await newOrder.save();
@@ -507,6 +507,7 @@ app.post('/orders', async (req, res) => {
     res.status(500).json({ error: "Błąd serwera przy dodawaniu zamówienia", details: err.message });
   }
 });
+
 
 
 
