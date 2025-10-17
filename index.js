@@ -66,6 +66,7 @@ app.use(cors({
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 
@@ -74,7 +75,8 @@ app.use(cors({
 
 
 app.use(express.json());
-
+app.use(helmet());
+app.use(cookieParser());
 
 
 // 🔑 Zmienne środowiskowe
@@ -168,23 +170,25 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
   })
   .catch((err) => console.log("MongoDB connection error:", err));
 
+const authRoutes = require('./routes/auth');
+app.use(authRoutes);
+
+const requireAuth = require('./middleware/requireAuth');
+app.use('/tickets', requireAuth);
+app.use('/articles', requireAuth);
+app.use('/customers', requireAuth);
+app.use('/salessites', requireAuth);
+app.use('/orders', requireAuth);
+app.use('/taxdatas', requireAuth);
+app.use('/invoices', requireAuth);
+app.use('/correctives', requireAuth);
+
 app.get("/", (req, res) => {
   res.send("Hello from Express!");
 });
 
 app.get('/test-cors', (req, res) => {
   res.json({ success: true, origin: req.headers.origin });
-});
-
-
-app.get("/login", async (req, res) => {
-  try {
-    const logins = await Login.find();
-    res.json(logins);
-    
-  } catch (err) {
-    res.status(400).send("Error fetching admin logins");
-  }
 });
 
 app.get("/tickets", async (req, res) => {
