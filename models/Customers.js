@@ -24,19 +24,4 @@ const customersSchema = new mongoose.Schema({
 
 const Customers = mongoose.model("Customers", customersSchema)
 
-const bcrypt = require('bcryptjs');
-
-customersSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
-  next();
-});
-
-customersSchema.pre('findOneAndUpdate', async function(next){
-  const update = this.getUpdate();
-  if (update.password) update.password = await bcrypt.hash(update.password, 12);
-  next();
-});
-
-
 module.exports = Customers
