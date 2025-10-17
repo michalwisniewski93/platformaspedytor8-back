@@ -1,11 +1,11 @@
 const mongoose = require('mongoose')
 
 const customersSchema = new mongoose.Schema({
-    name: {type: String, required: true, select: false},
-    surname: {type: String, required: true, select: false},
-    street: {type: String, required: true, select: false},
-    postcode: {type: String, required: true, select: false},
-    city: {type: String, required: true, select: false},
+    name: {type: String, required: true},
+    surname: {type: String, required: true},
+    street: {type: String, required: true},
+    postcode: {type: String, required: true},
+    city: {type: String, required: true},
     companyname: {type: String, required: false},
     companystreet: {type: String, required: false},
     companypostcode: {type: String, required: false},
