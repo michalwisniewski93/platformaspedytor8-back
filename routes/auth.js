@@ -17,7 +17,6 @@ router.post('/login', async (req, res) => {
     if (!user)
         return res.status(401).json({ message: 'Nieprawidłowy login lub hasło' });
 
-    // Важно: user.password должен быть хэшем bcrypt
     const ok = await bcrypt.compare(password, user.password);
     if (!ok)
         return res.status(401).json({ message: 'Nieprawidłowy login lub hasło' });
