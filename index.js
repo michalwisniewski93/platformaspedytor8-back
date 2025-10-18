@@ -1,8 +1,9 @@
 const express = require("express");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
-const stripe = require('stripe')(process.env.STRIPE_NEW_SECRET);
-
+//const stripe = require('stripe')(process.env.STRIPE_NEW_SECRET);
+const cookieParser = require('cookie-parser');
+require('express-rate-limit');
 const cors = require("cors");
 
 
