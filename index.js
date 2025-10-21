@@ -154,11 +154,6 @@ app.use(authRoutes);
 const requireAuth = require('./middleware/requireAuth');
 const applyBaseAuth = require('./middleware/applyBaseAuth');
 
-// Najpierw zweryfikuj źródło tokenu, frontend powinien dostać uprawnienia do wykonywania podstawowego CRUD'a
-app.use('/', applyBaseAuth);
-// Następnie zweryfikuj użytkownika
-app.use('/', requireAuth);
-
 app.get("/", (req, res) => {
   res.send("Hello from Express!");
 });
@@ -167,7 +162,7 @@ app.get('/test-cors', (req, res) => {
   res.json({ success: true, origin: req.headers.origin });
 });
 
-app.get("/tickets", async (req, res) => {
+app.get("/tickets", requireAuth, async (req, res) => {
   try {
     const tickets = await Tickets.find();
     res.json(tickets);
@@ -178,7 +173,7 @@ app.get("/tickets", async (req, res) => {
 });
 
 
-app.post('/tickets', async (req, res) => {
+app.post('/tickets', requireAuth, async (req, res) => {
   const newTickets = new Tickets({
     nameandsurname: req.body.nameandsurname,
     email: req.body.email,
@@ -194,7 +189,7 @@ app.post('/tickets', async (req, res) => {
   }
 })
 
-app.put("/tickets/:id", async (req, res) => {
+app.put("/tickets/:id", requireAuth, async (req, res) => {
   try {
     const updatedTicket = await Tickets.findByIdAndUpdate(
       req.params.id,  // Znajdź element po ID
@@ -210,7 +205,7 @@ app.put("/tickets/:id", async (req, res) => {
 
 
 
-app.post('/upload', upload.single('file'), (req, res) => {
+app.post('/upload', requireAuth, upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).send('No file uploaded');
   }
@@ -221,7 +216,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
 
 
 
-app.get("/articles", async (req, res) => {
+app.get("/articles", applyBaseAuth, requireAuth, async (req, res) => {
   try {
     const articles = await Articles.find();
     res.json(articles);
@@ -232,7 +227,7 @@ app.get("/articles", async (req, res) => {
 });
 
 
-app.post('/articles', async (req, res) => {
+app.post('/articles', requireAuth, async (req, res) => {
   const newArticles = new Articles({
     title: req.body.title,
     description: req.body.description,
@@ -248,7 +243,7 @@ app.post('/articles', async (req, res) => {
   }
 })
 
-app.delete("/articles/:id", async (req, res) => {
+app.delete("/articles/:id", requireAuth, async (req, res) => {
   try {
     const articles = await Articles.findByIdAndDelete(req.params.id);
     res.json({ message: "Article deleted", articles });
@@ -258,7 +253,7 @@ app.delete("/articles/:id", async (req, res) => {
 });
 
 
-app.get("/customers", async (req, res) => {
+app.get("/customers", applyBaseAuth, requireAuth, async (req, res) => {
   try {
     const customers = await Customers.find();
     res.json(customers);
@@ -268,7 +263,7 @@ app.get("/customers", async (req, res) => {
   }
 });
 
-app.post('/customers', async (req, res) => {
+app.post('/customers', requireAuth, async (req, res) => {
   const newCustomers = new Customers({
     name: req.body.name,
     surname: req.body.surname,
@@ -298,7 +293,7 @@ app.post('/customers', async (req, res) => {
   }
 })
 
-app.delete("/customers/:id", async (req, res) => {
+app.delete("/customers/:id", requireAuth, async (req, res) => {
   try {
     const customers = await Customers.findByIdAndDelete(req.params.id);
     res.json({ message: "Customer deleted", customers });
@@ -308,7 +303,7 @@ app.delete("/customers/:id", async (req, res) => {
 });
 
 
-app.put("/customers/:id", async (req, res) => {
+app.put("/customers/:id", requireAuth, async (req, res) => {
   try {
     const updatedCustomer = await Customers.findByIdAndUpdate(
       req.params.id,  // Znajdź element po ID
@@ -326,7 +321,7 @@ app.put("/customers/:id", async (req, res) => {
 
 
 
-app.get("/salessites", async (req, res) => {
+app.get("/salessites", applyBaseAuth, requireAuth, async (req, res) => {
   try {
     const salessites = await Salessites.find();
     res.json(salessites);
@@ -337,7 +332,7 @@ app.get("/salessites", async (req, res) => {
 });
 
 
-app.post('/salessites', async (req, res) => {
+app.post('/salessites', requireAuth, async (req, res) => {
   const newSalessites = new Salessites({
     title: req.body.title,
     imageurl: req.body.imageurl,
@@ -360,7 +355,7 @@ app.post('/salessites', async (req, res) => {
   }
 })
 
-app.delete("/salessites/:id", async (req, res) => {
+app.delete("/salessites/:id", requireAuth, async (req, res) => {
   try {
     const salessites = await Salessites.findByIdAndDelete(req.params.id);
     res.json({ message: "Sales site deleted", salessites });
@@ -370,7 +365,7 @@ app.delete("/salessites/:id", async (req, res) => {
 });
 
 
-app.put("/salessites/:id", async (req, res) => {
+app.put("/salessites/:id", requireAuth, async (req, res) => {
   try {
     const updatedSalessite = await Salessites.findByIdAndUpdate(
       req.params.id,  // Znajdź element po ID
@@ -384,7 +379,7 @@ app.put("/salessites/:id", async (req, res) => {
 });
 
 
-app.post('/create-checkout-session', async (req, res) => {
+app.post('/create-checkout-session', requireAuth, async (req, res) => {
   const items = req.body.items;
 
   const line_items = items.map(item => ({
@@ -421,7 +416,7 @@ app.post('/create-checkout-session', async (req, res) => {
 });
 
 
-app.get('/check-payment-status', async (req, res) => {
+app.get('/check-payment-status', requireAuth, async (req, res) => {
   const sessionId = req.query.sessionId;
 
   if (!sessionId) return res.status(400).json({ error: 'Brak sessionId' });
@@ -441,7 +436,7 @@ app.get('/check-payment-status', async (req, res) => {
 
 
 
-app.get("/orders", async (req, res) => {
+app.get("/orders", requireAuth, async (req, res) => {
   try {
     const orders = await Orders.find();
     res.json(orders);
@@ -450,7 +445,8 @@ app.get("/orders", async (req, res) => {
     res.status(400).send("Error fetching orders");
   }
 });
-app.post('/orders', async (req, res) => {
+
+app.post('/orders', requireAuth, async (req, res) => {
   try {
     console.log("DEBUG: req.body przychodzące do /orders:", req.body);
 
@@ -494,7 +490,7 @@ app.post('/orders', async (req, res) => {
 
 
 
-app.put("/orders/:id", async (req, res) => {
+app.put("/orders/:id", requireAuth, async (req, res) => {
   try {
     const updatedOrder = await Orders.findByIdAndUpdate(
       req.params.id,  // Znajdź element po ID
@@ -528,7 +524,7 @@ app.put("/orders/:id", async (req, res) => {
 });
 
 
-app.delete("/orders/:id", async (req, res) => {
+app.delete("/orders/:id", requireAuth, async (req, res) => {
   try {
     const orders = await Orders.findByIdAndDelete(req.params.id);
     res.json({ message: "Orders deleted", orders });
@@ -538,7 +534,7 @@ app.delete("/orders/:id", async (req, res) => {
 });
 
 
-app.get("/taxdatas", async (req, res) => {
+app.get("/taxdatas", requireAuth, async (req, res) => {
   try {
     const taxdatas = await Taxdatas.find();
     res.json(taxdatas);
@@ -550,7 +546,7 @@ app.get("/taxdatas", async (req, res) => {
 
 
 
-app.put("/taxdatas/:id", async (req, res) => {
+app.put("/taxdatas/:id", requireAuth, async (req, res) => {
   try {
     const updatedTaxdata = await Taxdatas.findByIdAndUpdate(
       req.params.id,  // Znajdź element po ID
@@ -573,7 +569,7 @@ app.put("/taxdatas/:id", async (req, res) => {
 });
 
 
-app.get("/invoices", async (req, res) => {
+app.get("/invoices", requireAuth, async (req, res) => {
   try {
     const invoices = await Invoices.find();
     res.json(invoices);
@@ -584,7 +580,7 @@ app.get("/invoices", async (req, res) => {
 });
 
 
-app.post('/invoices', async (req, res) => {
+app.post('/invoices', requireAuth, async (req, res) => {
   const newInvoices = new Invoices({
     
     invoicenumber: req.body.invoicenumber,
@@ -626,7 +622,7 @@ app.post('/invoices', async (req, res) => {
 
 
 
-app.put("/invoices/:id", async (req, res) => {
+app.put("/invoices/:id", requireAuth, async (req, res) => {
   try {
     const updatedInvoice = await Invoices.findByIdAndUpdate(
       req.params.id,  // Znajdź element po ID
@@ -668,7 +664,7 @@ app.put("/invoices/:id", async (req, res) => {
 
 
 
-app.delete("/invoices/:id", async (req, res) => {
+app.delete("/invoices/:id", requireAuth, async (req, res) => {
   try {
     const invoices = await Invoices.findByIdAndDelete(req.params.id);
     res.json({ message: "Invoices deleted", invoices });
@@ -679,7 +675,7 @@ app.delete("/invoices/:id", async (req, res) => {
 
 
 
-app.get("/correctives", async (req, res) => {
+app.get("/correctives", requireAuth, async (req, res) => {
   try {
     const correctives = await Correctives.find();
     res.json(correctives);
@@ -690,7 +686,7 @@ app.get("/correctives", async (req, res) => {
 });
 
 
-app.post('/correctives', async (req, res) => {
+app.post('/correctives', requireAuth, async (req, res) => {
   const newCorrectives = new Correctives({
     numberofcorrectiveinvoice: req.body.numberofcorrectiveinvoice,
     dateofissuecorrectiveinvoice: req.body.dateofissuecorrectiveinvoice,
@@ -735,7 +731,7 @@ app.post('/correctives', async (req, res) => {
 
 
 
-app.put("/correctives/:id", async (req, res) => {
+app.put("/correctives/:id", requireAuth, async (req, res) => {
   try {
     const updatedCorrective = await Correctives.findByIdAndUpdate(
       req.params.id,  // Znajdź element po ID
@@ -782,7 +778,7 @@ app.put("/correctives/:id", async (req, res) => {
 
 
 
-app.delete("/correctives/:id", async (req, res) => {
+app.delete("/correctives/:id", requireAuth, async (req, res) => {
   try {
     const correctives = await Correctives.findByIdAndDelete(req.params.id);
     res.json({ message: "Correctives deleted", correctives });
@@ -792,7 +788,7 @@ app.delete("/correctives/:id", async (req, res) => {
 });
 
 
-app.post("/api/track", async (req, res) => {
+app.post("/api/track", requireAuth, async (req, res) => {
   const { source } = req.body;
 
   if (!source) return res.status(400).json({ error: "Brak źródła" });
@@ -807,14 +803,14 @@ app.post("/api/track", async (req, res) => {
 });
 
 // 📌 API do pobrania statystyk
-app.get("/api/stats", async (req, res) => {
+app.get("/api/stats", requireAuth, async (req, res) => {
   const stats = await Referral.find({});
   res.json(stats);
 });
 // ============================================================
 // 2. Tworzenie transakcji (Tpay)
 // ============================================================
-app.post("/tpay/create-transaction", async (req, res) => {
+app.post("/tpay/create-transaction", requireAuth, async (req, res) => {
   try {
     const { items, totalPrice, email } = req.body;
 
@@ -891,7 +887,7 @@ app.post("/tpay/create-transaction", async (req, res) => {
 // ============================================================
 // 3. Sprawdzenie statusu
 // ============================================================
-app.get("/tpay/check-status/:transactionId", async (req, res) => {
+app.get("/tpay/check-status/:transactionId", requireAuth, async (req, res) => {
   try {
     const accessToken = await getAccessToken();
     const { transactionId } = req.params;
@@ -921,7 +917,7 @@ app.get("/tpay/check-status/:transactionId", async (req, res) => {
 // Parser tylko dla webhooka (x-www-form-urlencoded)
 // Parser tylko dla webhooka (x-www-form-urlencoded)
 app.use("/tpay/webhook", express.urlencoded({ extended: false }));
-app.post('/tpay/webhook', async (req, res) => {
+app.post('/tpay/webhook', requireAuth, async (req, res) => {
   try {
     console.log("===== NOWY WEBHOOK =====");
     console.log("Body:", req.body);
