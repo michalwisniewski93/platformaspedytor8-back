@@ -1,20 +1,19 @@
 const express = require("express");
+const ALLOWED_ORIGINS = require("./consts/allowedOrigins");
+const { createBaseUser } = require("./utils/startUp");
 const crypto = require("crypto");
 const mongoose = require("mongoose");
 const helmet = require("helmet");
-const stripe = require('stripe')(process.env.STRIPE_NEW_SECRET);
 const cookieParser = require('cookie-parser');
 require('express-rate-limit');
 const cors = require("cors");
 
-
 const multer = require('multer');
 const path = require('path');
 
-
-
-
 require("dotenv").config();
+const stripe = require('stripe')(process.env.STRIPE_NEW_SECRET);
+
 
 //models
 const Login = require("./models/Login");
@@ -28,28 +27,8 @@ const Invoices = require("./models/Invoices")
 const Correctives = require("./models/Correctives")
 const Referral = require("./models/Referral")
 
-
-
 const app = express();
 const port = process.env.PORT || 5000;
-
-
-
-
-
-
-
-
-
-
-// Middleware
-
-
-const allowedOrigins = [
-  'https://platformaspedytor24-front.vercel.app',
-  'https://spedytorszkolenia.pl',
-  'https://www.spedytorszkolenia.pl',
-];
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -59,7 +38,7 @@ app.use(cors({
     const normalizedOrigin = origin.replace(/\/$/, '');
     console.log(`CORS check: origin=${origin} | normalized=${normalizedOrigin}`);
 
-    if (allowedOrigins.includes(normalizedOrigin)) {
+    if (ALLOWED_ORIGINS.includes(normalizedOrigin)) {
       console.log('✅ Origin allowed');
       return callback(null, true);
     }
@@ -160,15 +139,12 @@ const resetInvoicesNumber = async () => {
   }
 };
 
-
-
-
-
 // MongoDB połączenie
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => {
+  .then(async () => {
     console.log("Connected to MongoDB");
-    resetInvoicesNumber(); // <<< WYWOŁANIE FUNKCJI PO POŁĄCZENIU
+    await createBaseUser();
+    await resetInvoicesNumber(); // <<< WYWOŁANIE FUNKCJI PO POŁĄCZENIU
   })
   .catch((err) => console.log("MongoDB connection error:", err));
 
@@ -176,14 +152,12 @@ const authRoutes = require('./routes/auth');
 app.use(authRoutes);
 
 const requireAuth = require('./middleware/requireAuth');
-app.use('/tickets', requireAuth);
-app.use('/articles', requireAuth);
-app.use('/customers', requireAuth);
-app.use('/salessites', requireAuth);
-app.use('/orders', requireAuth);
-app.use('/taxdatas', requireAuth);
-app.use('/invoices', requireAuth);
-app.use('/correctives', requireAuth);
+const applyBaseAuth = require('./middleware/applyBaseAuth');
+
+// Najpierw zweryfikuj źródło tokenu, frontend powinien dostać uprawnienia do wykonywania podstawowego CRUD'a
+app.use('/', applyBaseAuth);
+// Następnie zweryfikuj użytkownika
+app.use('/', requireAuth);
 
 app.get("/", (req, res) => {
   res.send("Hello from Express!");
