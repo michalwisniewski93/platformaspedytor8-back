@@ -1,13 +1,13 @@
-import Login from "../models/Login.js";
+import Customers from "../models/Customers.js";
 
 const createBaseUser = async () => {
     const login = process.env.PAGE_LOGIN;
     const password = process.env.PAGE_PASSWORD;
 
-    const user = await Login.findOne({ login: login });
+    const user = await Customers.findOne({ login: login });
 
     if (!user) {
-        await new Login({ login, password }).save();
+        await new Customers({ login, password }).save({ validateBeforeSave: false });
     }
 }
 

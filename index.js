@@ -263,7 +263,7 @@ app.get("/customers", applyBaseAuth, requireAuth, async (req, res) => {
   }
 });
 
-app.post('/customers', requireAuth, async (req, res) => {
+app.post('/customers', applyBaseAuth, requireAuth, async (req, res) => {
   const newCustomers = new Customers({
     name: req.body.name,
     surname: req.body.surname,
