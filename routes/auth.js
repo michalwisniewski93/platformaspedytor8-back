@@ -1,8 +1,7 @@
 const router = require('express').Router();
-const bcrypt = require('bcryptjs');
-const Login = require('../models/Login');
 const { signAccess, signRefresh, verifyRefresh } = require('../utils/jwt');
 const rateLimit = require('express-rate-limit');
+const Customers = require("../models/Customers");
 const authLimiter = rateLimit({ windowMs: 15*60*1000, max: 100 });
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -13,11 +12,11 @@ router.post('/login', async (req, res) => {
     if (!login || !password)
         return res.status(400).json({ message: 'Login i hasło są wymagane' });
 
-    const user = await Login.findOne({ login });
+    const user = await Customers.findOne({ login });
     if (!user)
         return res.status(401).json({ message: 'Nieprawidłowy login lub hasło' });
 
-    const ok = await bcrypt.compare(password, user.password);
+    const ok = password === user.password;
     if (!ok)
         return res.status(401).json({ message: 'Nieprawidłowy login lub hasło' });
 

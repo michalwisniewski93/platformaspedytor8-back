@@ -1,6 +1,6 @@
 module.exports = function (req, res, next) {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // "Bearer token"
+    const token = (authHeader && authHeader.split(' ')[1]) || req.accessToken; // "Bearer token"
 
     if (!token) return res.status(401).json({ message: 'Brak tokenu, odmowa dostępu' });
     const secret = (process.env.JWT_ACCESS_SECRET || '').trim();
