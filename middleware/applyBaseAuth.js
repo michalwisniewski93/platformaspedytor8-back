@@ -10,7 +10,7 @@ module.exports = async function(req, res, next) {
     }
 
     // Request pochodzi ze strony mogącej wykonywać zapytania, więc można przyznać jej token
-    const user = await Login.findOne({ login: process.env.PAGE_LOGIN });
+    const user = await Customers.findOne({ login: process.env.PAGE_LOGIN });
 
     if (!user) {
         throw Error('Bazowy użytkownik nie istnieje')
@@ -26,5 +26,5 @@ module.exports = async function(req, res, next) {
 };
 
 const ALLOWED_ORIGINS = require("../consts/allowedOrigins");
-const Login = require("../models/Login");
 const { signAccess } = require("../utils/jwt");
+const Customers = require("../models/Customers");
