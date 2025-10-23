@@ -1,4 +1,4 @@
-import Customers from "../models/Customers.js";
+const Customers = require('../models/Customers');
 
 const createBaseUser = async () => {
     const login = process.env.PAGE_LOGIN;
@@ -11,4 +11,4 @@ const createBaseUser = async () => {
     }
 }
 
-export { createBaseUser };
+module.exports = { createBaseUser };
