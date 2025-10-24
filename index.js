@@ -81,8 +81,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+app.use('/static', (req, res, next) => {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+});
 
-app.use(express.static('public'));
+app.use('/static', express.static('public/static'));
 
 
 // ============================================================
