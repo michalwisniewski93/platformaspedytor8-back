@@ -17,8 +17,7 @@ const Login = require('../models/Login');
         if (existing) {
             console.log('Login already exists:', login);
         } else {
-            const hash = await bcrypt.hash(pass, 12);
-            await Login.create({ login, password: hash });
+            await Login.create({ login, password: pass });
             console.log('Login created:', login);
         }
 
