@@ -202,7 +202,14 @@ app.put("/tickets/:id", requireAuth, async (req, res) => {
   }
 });
 
-
+app.get("/login", applyBaseAuth, requireAuth, async (req, res) => {
+    try {
+        const logins = await Login.find();
+        res.json(logins);
+    } catch {
+        res.status(500).send("Error fetching logins")
+    }
+})
 
 
 app.post('/upload', requireAuth, upload.single('file'), (req, res) => {
