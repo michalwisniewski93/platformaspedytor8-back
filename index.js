@@ -13,7 +13,8 @@ const path = require('path');
 
 require("dotenv").config();
 const stripe = require('stripe')(process.env.STRIPE_NEW_SECRET);
-
+// sekret do stripe dodany 3.11.2025
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 //models
 const Login = require("./models/Login");
@@ -965,6 +966,71 @@ app.post('/tpay/webhook', requireAuth, async (req, res) => {
 
 
 
+
+
+//stripe nowa implementacja
+
+
+
+// Endpoint do tworzenia sesji płatności
+app.post("/create-checkout-session-stripe", async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card", "blik"],
+      mode: "payment",
+      line_items: [
+        {
+          price_data: {
+            currency: "pln",
+            product_data: {
+              name: "Twoje zamówienie.",
+            },
+            unit_amount: amount, // w groszach
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: "https://spedytorszkolenia.pl/success-stripe",
+      cancel_url: "https://spedytorszkolenia.pl/cancel-stripe",
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Webhook Stripe – musi używać raw body zamiast JSON
+app.post(
+  "/webhook-stripe",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    const sig = req.headers["stripe-signature"];
+    let event;
+
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    } catch (err) {
+      console.error("❌ Błąd webhook:", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Obsługa eventów Stripe
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+      console.log("✅ Płatność udana, session ID:", session.id);
+      // tutaj możesz zapisać status zamówienia jako "opłacone"
+    }
+
+    if (event.type === "payment_intent.payment_failed") {
+      console.log("❌ Płatność nieudana");
+    }
+
+    res.json({ received: true });
+  }
+);
 
 
 
